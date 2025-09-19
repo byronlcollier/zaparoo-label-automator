@@ -1,0 +1,261 @@
+import json
+import os
+import functools
+# from typing import Callable, Any, Optional, Dict
+from requests import (
+    post,
+    get
+)
+
+
+class TokenManager:
+
+    _API_CREDENTIALS_FILE = "api_credentials.json"
+    _TOKEN_FILE = "token.json"
+    # see https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#client-credentials-grant-flow
+    _CLIENT_CREDENTIALS_GRANT_ENDPOINT = "https://id.twitch.tv/oauth2/token"
+    # see https://dev.twitch.tv/docs/authentication/validate-tokens/#how-to-validate-a-token
+    _TOKEN_VALIDATION_ENDPOINT = "https://id.twitch.tv/oauth2/validate"
+    _TWITCH_API_TIMEOUT_SECONDS = 60
+
+
+    def __init__(
+        self,
+        config_path: str = "",
+    ):
+        if config_path is None or config_path == "":
+            raise AttributeError("Error! config_path must be provided.")
+        self._config_path = config_path
+        self._client_id = None
+        self._client_secret = None
+        # temporary until this is properly set
+        self._token = None
+
+    @property
+    def token(self) -> str:
+        if self._token is None:
+            raise AttributeError(
+                "Error! Token must first be set by calling initialise_token."
+            )
+
+        return self._token
+
+    def _valid_credentials_file(self) -> bool:
+
+        api_creds_path = os.path.join(self._config_path, self._API_CREDENTIALS_FILE)
+        if not os.path.exists(api_creds_path):
+            # Create template file
+            template = {
+                "client_id": "",
+                "client_secret": ""
+            }
+            with open(api_creds_path, 'w', encoding='utf-8') as f:
+                json.dump(template, f, indent=4)
+            raise FileNotFoundError(
+                f"{self._API_CREDENTIALS_FILE} was not found at {api_creds_path}. "
+                f"An empty template has been created. Please fill in required values."
+            )
+
+        # Validate credentials file structure
+        with open(api_creds_path, 'r', encoding='utf-8') as f:
+            creds = json.load(f)
+
+        required_cred_keys = ["client_id", "client_secret"]
+        for key in required_cred_keys:
+            if key not in creds or not creds[key]:
+                raise ValueError(
+                    f"{self._API_CREDENTIALS_FILE} is missing required value for '{key}'. "
+                    f"Please add this value to {api_creds_path}"
+                )
+
+        # If we've got this far without error then we have a valid file.
+        return True
+
+    def _valid_token_file(self) -> bool:
+
+        token_path = os.path.join(self._config_path, self._TOKEN_FILE)
+        if os.path.exists(token_path):
+            with open(token_path, 'r', encoding='utf-8') as f:
+                token_data = json.load(f)
+
+            required_token_keys = ["token"]
+            for key in required_token_keys:
+                if key not in token_data or not token_data[key]:
+                    raise ValueError(
+                        f"{self._TOKEN_FILE} is missing required value for '{key}'. "
+                        f"If you're seeing this error then there's a bug in _valid_token_file."
+                    )
+
+        # If we've got this far without error then we have a valid file.
+        return True
+
+    def _read_token_from_file(self) -> str:
+
+        token_path = os.path.join(self._config_path, self._TOKEN_FILE)
+
+        try:
+            with open(token_path, 'r', encoding='utf-8') as f:
+                token_data = json.load(f)
+
+            if "token" in token_data and token_data["token"]:
+                return token_data["token"]
+            else:
+                raise AttributeError(
+                    f"The token file {token_path} appears to have invalid structure. "
+                    f"If you're seeing this error then there's a bug in _valid_token_file."
+                )
+        except (json.JSONDecodeError, IOError) as e:
+            raise e
+
+    def _write_token_to_file(self, token_string: str):
+
+        token_path = os.path.join(self._config_path, self._TOKEN_FILE)
+        token_data = {"token": token_string}
+        with open(token_path, 'w', encoding='utf-8') as f:
+            json.dump(token_data, f, indent=4)
+
+    def _read_credentials_from_file(self) -> None:
+
+        api_creds_path = os.path.join(self._config_path, self._API_CREDENTIALS_FILE)
+        with open(api_creds_path, 'r', encoding='utf-8') as f:
+            creds = json.load(f)
+            self._client_id = creds["client_id"]
+            self._client_secret = creds["client_secret"]
+
+    def _valid_token(self, token_value: str) -> bool:
+
+        request_headers = {
+            'Client-ID': self._client_id,
+            'Authorization': (f"Bearer {token_value}"),
+        }
+
+        response = get(
+            url=self._TOKEN_VALIDATION_ENDPOINT,
+            headers=request_headers,
+            timeout=self._TWITCH_API_TIMEOUT_SECONDS,
+        )
+
+        response.raise_for_status()
+
+        # if no http error then assume a valid token
+        return True
+
+    def _get_new_token(self) -> str:
+
+        if not self._valid_credentials_file():
+            raise FileNotFoundError(
+                "The credentials file is invalid. "
+                "If you're seeing this message then there is a bug in _valid_credentials_file."
+            )
+
+        request_body = f"client_id={self._client_id}&client_secret={self._client_secret}&grant_type=client_credentials"
+
+        response = post(
+            url=self._CLIENT_CREDENTIALS_GRANT_ENDPOINT,
+            data=request_body,
+            timeout=self._TWITCH_API_TIMEOUT_SECONDS,
+        )
+
+        response.raise_for_status()
+
+        # if no http error then assume request was good
+
+        api_reply = json.loads(response.text)
+
+        return api_reply["token"]
+
+    def initialise_token(self) -> None:
+        if self._token is not None:
+            if self._valid_token(self._token):
+                return
+
+        if self._valid_token_file():
+            file_token = self._read_token_from_file()
+            if self._valid_token(file_token):
+                self._token = file_token
+        else:
+            fresh_token = self._get_new_token()
+            self._write_token_to_file(token_string=fresh_token)
+            self._token = fresh_token
+
+
+    # EXAMPLE CODE NOT CURRENTLY USED
+    # @property
+    # def token(self) -> Optional[str]:
+    #     """Get the current token, refreshing if expired."""
+    #     if self.is_expired:
+    #         self.refresh_token()
+    #     return self._token
+
+    # @property
+    # def is_expired(self) -> bool:
+    #     """Check if the current token is expired."""
+    #     return time.time() >= self._token_expiry
+
+    # @property
+    # def auth_header(self) -> Dict[str, str]:
+    #     """Get authorization header using current token."""
+    #     return {"Authorization": f"Bearer {self.token}"}
+
+    # def refresh_token(self) -> None:
+    #     """
+    #     Refresh the OAuth token.
+
+    #     In a real implementation, this would make an API call to get a new token.
+    #     This is just a simulation.
+    #     """
+    #     if self._refresh_attempts >= self._max_refresh_attempts:
+    #         raise RuntimeError("Maximum token refresh attempts exceeded")
+
+    #     # Simulate getting a new token
+    #     self._token = f"refreshed_token_{int(time.time())}"
+    #     self._token_expiry = time.time() + 3600
+    #     self._refresh_attempts += 1
+
+    # def reset_refresh_count(self) -> None:
+    #     """Reset the refresh attempts counter."""
+    #     self._refresh_attempts = 0
+
+    # def requires_auth(self, func: Callable) -> Callable:
+    #     """
+    #     Decorator that ensures a valid token is available before calling the function.
+
+    #     This can be used as a decorator on other functions outside this module.
+
+    #     Args:
+    #         func: The function to wrap with authentication
+
+    #     Returns:
+    #         The wrapped function with authentication handling
+    #     """
+    #     @functools.wraps(func)
+    #     def wrapper(*args, **kwargs):
+    #         if not self.token:
+    #             raise ValueError("No authentication token available")
+
+    #         # Add auth header to kwargs if there's a headers dict
+    #         if 'headers' in kwargs and isinstance(kwargs['headers'], dict):
+    #             kwargs['headers'].update(self.auth_header)
+    #         else:
+    #             kwargs['headers'] = self.auth_header
+
+    #         try:
+    #             return func(*args, **kwargs)
+    #         except Exception as e:
+    #             # Handle authentication errors - in a real implementation you might
+    #             # check for specific auth errors and retry with a fresh token
+    #             if "authentication" in str(e).lower() and self._refresh_attempts < self._max_refresh_attempts:
+    #                 self.refresh_token()
+    #                 return func(*args, **kwargs)
+    #             raise
+
+    #     return wrapper
+
+    # def __str__(self) -> str:
+    #     """String representation showing token status."""
+    #     status = "valid" if not self.is_expired else "expired"
+    #     return f"OAuthToken(status={status}, expires_in={int(self._token_expiry - time.time())} seconds)"
+
+    # def __bool__(self) -> bool:
+    #     """Boolean representation of token validity."""
+    #     return bool(self._token and not self.is_expired)
