@@ -32,7 +32,7 @@ class TokenManager:
         self._token = None
 
     @property
-    def token(self) -> str:
+    def value(self) -> str:
         if self._token is None:
             raise AttributeError(
                 "Error! Token must first be set by calling initialise_token."
@@ -184,7 +184,7 @@ class TokenManager:
     def token_validation(self, func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            self.initialise_token
+            self.initialise_token()  # Fixed: Added parentheses to actually call the method
             return func(*args, **kwargs)
         return wrapper
 
