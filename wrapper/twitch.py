@@ -85,9 +85,10 @@ class TokenManager:
                         f"{self._TOKEN_FILE} is missing required value for '{key}'. "
                         f"If you're seeing this error then there's a bug in _valid_token_file."
                     )
-
-        # If we've got this far without error then we have a valid file.
-        return True
+            # If we've got this far without error then we have a valid file.
+            return True
+        else:
+            return False
 
     def _read_token_from_file(self) -> str:
 
@@ -148,6 +149,8 @@ class TokenManager:
                 "If you're seeing this message then there is a bug in _valid_credentials_file."
             )
 
+        self._read_credentials_from_file()
+
         request_body = f"client_id={self._client_id}&client_secret={self._client_secret}&grant_type=client_credentials"
 
         response = post(
@@ -162,7 +165,7 @@ class TokenManager:
 
         api_reply = json.loads(response.text)
 
-        return api_reply["token"]
+        return api_reply["access_token"]
 
     def initialise_token(self) -> None:
         if self._token is not None:
@@ -177,6 +180,13 @@ class TokenManager:
             fresh_token = self._get_new_token()
             self._write_token_to_file(token_string=fresh_token)
             self._token = fresh_token
+
+    def token_validation(self, func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            self.initialise_token
+            return func(*args, **kwargs)
+        return wrapper
 
 
     # EXAMPLE CODE NOT CURRENTLY USED
