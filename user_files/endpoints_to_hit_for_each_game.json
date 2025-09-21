@@ -1,0 +1,182 @@
+[
+    {
+        "name": "games",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/games",
+            "count_endpoint_url": "https://api.igdb.com/v4/games/count",
+            "http_method": "POST",
+            "body": "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,forks,franchise,franchises,game_engines,game_localizations,game_modes,game_status,game_type,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "age_ratings",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/age_ratings",
+            "count_endpoint_url": "https://api.igdb.com/v4/age_ratings/count",
+            "http_method": "POST",
+            "body": "fields organization,rating_category,rating_content_descriptions,rating_cover_url,synopsis; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "alternative_names",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/alternative_names",
+            "count_endpoint_url": "https://api.igdb.com/v4/alternative_names/count",
+            "http_method": "POST",
+            "body": "fields comment,game,name; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "artworks",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/artworks",
+            "count_endpoint_url": "https://api.igdb.com/v4/artworks/count",
+            "http_method": "POST",
+            "body": "fields alpha_channel,animated,artwork_type,game,height,image_id,url,width; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "collections",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/collections",
+            "count_endpoint_url": "https://api.igdb.com/v4/artworks/count",
+            "http_method": "POST",
+            "body": "fields as_child_relations,as_parent_relations,created_at,games,name,slug,type,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "covers",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/covers",
+            "count_endpoint_url": "https://api.igdb.com/v4/covers/count",
+            "http_method": "POST",
+            "body": "fields alpha_channel,animated,game,game_localization,height,image_id,url,width; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "external_games",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/external_games",
+            "count_endpoint_url": "https://api.igdb.com/v4/external_games/count",
+            "http_method": "POST",
+            "body": "fields countries,created_at,external_game_source,game,game_release_format,name,platform,uid,updated_at,url,year; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "franchises",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/franchises",
+            "count_endpoint_url": "https://api.igdb.com/v4/franchises/count",
+            "http_method": "POST",
+            "body": "fields created_at,games,name,slug,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_engines",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_engines",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_engines/count",
+            "http_method": "POST",
+            "body": "fields companies,created_at,description,logo,name,platforms,slug,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "companies",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/companies",
+            "count_endpoint_url": "https://api.igdb.com/v4/companies/count",
+            "http_method": "POST",
+            "body": "fields change_date,change_date_format,changed_company_id,country,created_at,description,developed,logo,name,parent,published,slug,start_date,start_date_format,status,updated_at,url,websites; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "company_logos",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/company_logos",
+            "count_endpoint_url": "https://api.igdb.com/v4/company_logos/count",
+            "http_method": "POST",
+            "body": "fields alpha_channel,animated,height,image_id,url,width; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "company_websites",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/company_websites",
+            "count_endpoint_url": "https://api.igdb.com/v4/company_websites/count",
+            "http_method": "POST",
+            "body": "fields trusted,type,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_localizations",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_localizations",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_localizations/count",
+            "http_method": "POST",
+            "body": "fields cover,created_at,game,name,region,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "involved_companies",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/involved_companies",
+            "count_endpoint_url": "https://api.igdb.com/v4/involved_companies/count",
+            "http_method": "POST",
+            "body": "fields company,created_at,developer,game,porting,publisher,supporting,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "language_supports",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/language_supports",
+            "count_endpoint_url": "https://api.igdb.com/v4/language_supports/count",
+            "http_method": "POST",
+            "body": "fields created_at,game,language,language_support_type,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "multiplayer_modes",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/multiplayer_modes",
+            "count_endpoint_url": "https://api.igdb.com/v4/multiplayer_modes/count",
+            "http_method": "POST",
+            "body": "fields campaigncoop,checksum,dropin,game,lancoop,offlinecoop,offlinecoopmax,offlinemax,onlinecoop,onlinecoopmax,onlinemax,platform,splitscreen,splitscreenonline; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "screenshots",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/screenshots",
+            "count_endpoint_url": "https://api.igdb.com/v4/screenshots/count",
+            "http_method": "POST",
+            "body": "fields alpha_channel,animated,game,height,image_id,url,width; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_videos",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_videos",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_videos/count",
+            "http_method": "POST",
+            "body": "fields game,name,video_id; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "websites",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/websites",
+            "count_endpoint_url": "https://api.igdb.com/v4/websites/count",
+            "http_method": "POST",
+            "body": "fields game,trusted,type,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "release_dates",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/release_dates",
+            "count_endpoint_url": "https://api.igdb.com/v4/release_dates/count",
+            "http_method": "POST",
+            "body": "fields created_at,date,date_format,game,human,m,platform,release_region,status,updated_at,y; limit {{request_limit}}; sort id asc;"
+        }
+    }
+]

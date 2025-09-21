@@ -181,91 +181,19 @@ class TokenManager:
             self._write_token_to_file(token_string=fresh_token)
             self._token = fresh_token
 
-    def token_validation(self, func):
+    @staticmethod
+    def token_validation(func):
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            self.initialise_token()  # Fixed: Added parentheses to actually call the method
-            return func(*args, **kwargs)
+        def wrapper(self, *args, **kwargs):
+            self._token.initialise_token()
+            return func(self, *args, **kwargs)
         return wrapper
-
-
-    # EXAMPLE CODE NOT CURRENTLY USED
-    # @property
-    # def token(self) -> Optional[str]:
-    #     """Get the current token, refreshing if expired."""
-    #     if self.is_expired:
-    #         self.refresh_token()
-    #     return self._token
-
-    # @property
-    # def is_expired(self) -> bool:
-    #     """Check if the current token is expired."""
-    #     return time.time() >= self._token_expiry
-
-    # @property
-    # def auth_header(self) -> Dict[str, str]:
-    #     """Get authorization header using current token."""
-    #     return {"Authorization": f"Bearer {self.token}"}
-
-    # def refresh_token(self) -> None:
-    #     """
-    #     Refresh the OAuth token.
-
-    #     In a real implementation, this would make an API call to get a new token.
-    #     This is just a simulation.
-    #     """
-    #     if self._refresh_attempts >= self._max_refresh_attempts:
-    #         raise RuntimeError("Maximum token refresh attempts exceeded")
-
-    #     # Simulate getting a new token
-    #     self._token = f"refreshed_token_{int(time.time())}"
-    #     self._token_expiry = time.time() + 3600
-    #     self._refresh_attempts += 1
-
-    # def reset_refresh_count(self) -> None:
-    #     """Reset the refresh attempts counter."""
-    #     self._refresh_attempts = 0
-
-    # def requires_auth(self, func: Callable) -> Callable:
-    #     """
-    #     Decorator that ensures a valid token is available before calling the function.
-
-    #     This can be used as a decorator on other functions outside this module.
-
-    #     Args:
-    #         func: The function to wrap with authentication
-
-    #     Returns:
-    #         The wrapped function with authentication handling
-    #     """
-    #     @functools.wraps(func)
-    #     def wrapper(*args, **kwargs):
-    #         if not self.token:
-    #             raise ValueError("No authentication token available")
-
-    #         # Add auth header to kwargs if there's a headers dict
-    #         if 'headers' in kwargs and isinstance(kwargs['headers'], dict):
-    #             kwargs['headers'].update(self.auth_header)
-    #         else:
-    #             kwargs['headers'] = self.auth_header
-
-    #         try:
-    #             return func(*args, **kwargs)
-    #         except Exception as e:
-    #             # Handle authentication errors - in a real implementation you might
-    #             # check for specific auth errors and retry with a fresh token
-    #             if "authentication" in str(e).lower() and self._refresh_attempts < self._max_refresh_attempts:
-    #                 self.refresh_token()
-    #                 return func(*args, **kwargs)
-    #             raise
-
-    #     return wrapper
-
-    # def __str__(self) -> str:
-    #     """String representation showing token status."""
-    #     status = "valid" if not self.is_expired else "expired"
-    #     return f"OAuthToken(status={status}, expires_in={int(self._token_expiry - time.time())} seconds)"
-
-    # def __bool__(self) -> bool:
-    #     """Boolean representation of token validity."""
-    #     return bool(self._token and not self.is_expired)
+    
+    def get_header(self) -> dict:
+        if self._client_id is None:
+            self._read_credentials_from_file()
+        
+        return {
+            "Client-ID": self._client_id,
+            "Authorization": f"Bearer {self.value}"
+        }

@@ -1,0 +1,97 @@
+[
+    {
+        "mister_name": "Amstrad CPC 6128",
+        "igdb_name": "Amstrad CPC",
+        "igdb_id": 25
+    },
+    {
+        "mister_name": "Atari ST/STe",
+        "igdb_name": "Atari ST/STe",
+        "igdb_id": 63
+    },
+    {
+        "mister_name": "ZX Spectrum",
+        "igdb_name": "ZX Spectrum",
+        "igdb_id": 26
+    },
+    {
+        "mister_name": "ZX81",
+        "igdb_name": "Sinclair ZX81",
+        "igdb_id": 373
+    },
+    {
+        "mister_name": "Atari 2600",
+        "igdb_name": "Atari 2600",
+        "igdb_id": 59
+    },
+    {
+        "mister_name": "Game Boy",
+        "igdb_name": "Game Boy",
+        "igdb_id": 33
+    },
+    {
+        "mister_name": "Game Boy Color",
+        "igdb_name": "Game Boy Color",
+        "igdb_id": 22
+    },
+    {
+        "mister_name": "Neo Geo MVS",
+        "igdb_name": "Neo Geo MVS",
+        "igdb_id": 79
+    },
+    {
+        "mister_name": "Neo Geo AES",
+        "igdb_name": "Neo Geo AES",
+        "igdb_id": 80
+    },
+    {
+        "mister_name": "Nintendo 64",
+        "igdb_name": "Nintendo 64",
+        "igdb_id": 4
+    },
+    {
+        "mister_name": "Nintendo Entertainment System (NES)",
+        "igdb_name": "Nintendo Entertainment System",
+        "igdb_id": 18
+    },
+    {
+        "mister_name": "PlayStation (PSX)",
+        "igdb_name": "PlayStation",
+        "igdb_id": 7
+    },
+    {
+        "mister_name": "Sega 32X",
+        "igdb_name": "Sega 32X",
+        "igdb_id": 30
+    },
+    {
+        "mister_name": "Sega Master System",
+        "igdb_name": "Sega Master System/Mark III",
+        "igdb_id": 64
+    },
+    {
+        "mister_name": "Sega Game Gear",
+        "igdb_name": "Sega Game Gear",
+        "igdb_id": 35
+    },
+    {
+        "mister_name": "Sega Saturn",
+        "igdb_name": "Sega Saturn",
+        "igdb_id": 32
+    },
+    {
+        "mister_name": "Super Nintendo Entertainment System (SNES)",
+        "igdb_name": "Super Nintendo Entertainment System",
+        "igdb_id": 19
+    },
+    {
+        "mister_name": "TurboGrafx-16/PC Engine",
+        "igdb_name": "TurboGrafx-16/PC Engine",
+        "igdb_id": 86
+    },
+    {
+        "mister_name": "TurboGrafx-16/PC Engine",
+        "igdb_name": "Turbografx-16/PC Engine CD",
+        "igdb_id": 150
+    }
+]

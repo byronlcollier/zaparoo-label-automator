@@ -210,3 +210,5 @@ __marimo__/
 
 # ignore config folder, as it may contain secrets
 .config
+# no need to include the results of the API query in the repo
+output

@@ -1,0 +1,317 @@
+[
+    {
+        "name": "platforms",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platforms",
+            "count_endpoint_url": "https://api.igdb.com/v4/platforms/count",
+            "http_method": "POST",
+            "body": "fields abbreviation,alternative_name,created_at,generation,name,platform_family,platform_logo,platform_type,slug,summary,updated_at,url,versions,websites; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_families",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_families",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_families/count",
+            "http_method": "POST",
+            "body": "fields name; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_logos",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_logos",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_logos/count",
+            "http_method": "POST",
+            "body": "fields alpha_channel,animated,height,image_id,url,width; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_types/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_versions",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_versions",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_versions/count",
+            "http_method": "POST",
+            "body": "fields companies,connectivity,cpu,graphics,main_manufacturer,media,memory,name,os,output,platform_logo,platform_version_release_dates,resolutions,slug,sound,storage,summary,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_version_companies",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_version_companies",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_version_companies/count",
+            "http_method": "POST",
+            "body": "fields comment,company,developer,manufacturer; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_version_companies",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_version_companies",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_version_companies/count",
+            "http_method": "POST",
+            "body": "fields comment,company,developer,manufacturer; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_version_release_dates",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_version_release_dates",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_version_release_dates/count",
+            "http_method": "POST",
+            "body": "fields created_at,date,date_format,human,m,platform_version,region,updated_at,y; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "date_formats",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/date_formats",
+            "count_endpoint_url": "https://api.igdb.com/v4/date_formats/count",
+            "http_method": "POST",
+            "body": "fields created_at,format,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "release_date_regions",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/release_date_regions",
+            "count_endpoint_url": "https://api.igdb.com/v4/release_date_regions/count",
+            "http_method": "POST",
+            "body": "fields created_at,region,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "platform_websites",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/platform_websites",
+            "count_endpoint_url": "https://api.igdb.com/v4/platform_websites/count",
+            "http_method": "POST",
+            "body": "fields trusted,type,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "website_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/website_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/website_types/count",
+            "http_method": "POST",
+            "body": "fields created_at,type,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "age_rating_organizations",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/age_rating_organizations",
+            "count_endpoint_url": "https://api.igdb.com/v4/age_rating_organizations/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "age_rating_categories",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/age_rating_categories",
+            "count_endpoint_url": "https://api.igdb.com/v4/age_rating_categories/count",
+            "http_method": "POST",
+            "body": "fields created_at,organization,rating,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "age_rating_content_descriptions_v2",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/age_rating_content_descriptions_v2",
+            "count_endpoint_url": "https://api.igdb.com/v4/age_rating_content_descriptions_v2/count",
+            "http_method": "POST",
+            "body": "fields created_at,description,description_type,organization,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "age_rating_content_description_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/age_rating_content_description_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/age_rating_content_description_types/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "artwork_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/artwork_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/artwork_types/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "collection_relations",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/collection_relations",
+            "count_endpoint_url": "https://api.igdb.com/v4/collection_relations/count",
+            "http_method": "POST",
+            "body": "fields child_collection,created_at,parent_collection,type,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "collection_relation_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/collection_relation_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/collection_relation_types/count",
+            "http_method": "POST",
+            "body": "fields allowed_child_type,allowed_parent_type,created_at,description,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "collection_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/collection_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/collection_types/count",
+            "http_method": "POST",
+            "body": "fields created_at,description,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "external_game_sources",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/external_game_sources",
+            "count_endpoint_url": "https://api.igdb.com/v4/external_game_sources/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_release_formats",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_release_formats",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_release_formats/count",
+            "http_method": "POST",
+            "body": "fields created_at,format,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "company_statuses",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/company_statuses",
+            "count_endpoint_url": "https://api.igdb.com/v4/company_statuses/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_engine_logos",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_engine_logos",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_engine_logos/count",
+            "http_method": "POST",
+            "body": "fields alpha_channel,animated,height,image_id,url,width; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "regions",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/regions",
+            "count_endpoint_url": "https://api.igdb.com/v4/regions/count",
+            "http_method": "POST",
+            "body": "fields category,created_at,identifier,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_modes",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_modes",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_modes/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_statuses",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_statuses",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_statuses/count",
+            "http_method": "POST",
+            "body": "fields created_at,status,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "game_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/game_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/game_types/count",
+            "http_method": "POST",
+            "body": "fields created_at,type,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "genres",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/genres",
+            "count_endpoint_url": "https://api.igdb.com/v4/genres/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "keywords",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/keywords",
+            "count_endpoint_url": "https://api.igdb.com/v4/keywords/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "languages",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/languages",
+            "count_endpoint_url": "https://api.igdb.com/v4/languages/count",
+            "http_method": "POST",
+            "body": "fields created_at,locale,name,native_name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "language_support_types",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/language_support_types",
+            "count_endpoint_url": "https://api.igdb.com/v4/language_support_types/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "player_perspectives",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/player_perspectives",
+            "count_endpoint_url": "https://api.igdb.com/v4/player_perspectives/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "themes",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/themes",
+            "count_endpoint_url": "https://api.igdb.com/v4/themes/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at,url; limit {{request_limit}}; sort id asc;"
+        }
+    },
+    {
+        "name": "release_date_statuses",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/release_date_statuses",
+            "count_endpoint_url": "https://api.igdb.com/v4/release_date_statuses/count",
+            "http_method": "POST",
+            "body": "fields created_at,description,name,updated_at; limit {{request_limit}}; sort id asc;"
+        }
+    }
+]
