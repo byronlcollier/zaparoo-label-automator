@@ -1,0 +1,7 @@
+{
+    "name": "platforms",
+    "endpoint_url": "https://api.igdb.com/v4/platforms",
+    "count_endpoint_url": "https://api.igdb.com/v4/platforms/count",
+    "http_method": "POST",
+    "body": "fields name, abbreviation, alternative_name, generation, platform_family.name, platform_logo.alpha_channel, platform_logo.animated, platform_logo.image_id, platform_logo.url, platform_logo.width, platform_logo.height, platform_type.name, slug, summary, websites.trusted, websites.type.type, websites.url; where id = ({{platform_id_list}}); sort id asc; limit {{request_limit}};"
+}
