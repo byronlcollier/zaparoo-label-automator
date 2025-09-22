@@ -1,7 +1,0 @@
-{
-    "name": "games",
-    "endpoint_url": "https://api.igdb.com/v4/games",
-    "count_endpoint_url": "https://api.igdb.com/v4/games/count",
-    "http_method": "POST",
-    "body": "fields name,version_title,rating,rating_count,platforms,total_rating,url,summary,storyline,artworks.artwork_type.name,artworks.alpha_channel,artworks.animated,artworks.height,artworks.width,artworks.image_id,artworks.url,collections.name,collections.url,collections.type.name,cover.game_localization.name,cover.game_localization.region.name,cover.alpha_channel,cover.animated,cover.height,cover.width,cover.image_id,cover.url,screenshots.alpha_channel,screenshots.animated,screenshots.height,screenshots.width,screenshots.image_id,screenshots.url,language_supports.language.locale,language_supports.language.name,language_supports.language.native_name,language_supports.language_support_type.name; sort rating desc; where platforms = ({{platform_id}}); limit {{number_to_retrieve}};"
-}
