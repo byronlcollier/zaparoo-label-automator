@@ -7,7 +7,7 @@ It processes all endpoints defined in the api_endpoints.json.j2 configuration fi
 
 import json
 import sys
-from reference_data.igdb import DataCollector
+from zaparoo_label_automator.reference_data.igdb import DataCollector
 
 # UPPER_BATCH_LIMIT = 500
 UPPER_BATCH_LIMIT = 100

@@ -12,9 +12,9 @@ import re
 from typing import List, Dict, Any, Set, cast, Literal
 from datetime import datetime
 
-from wrapper.twitch import TokenManager
-from wrapper.generic import GenericRestAPI
-from reference_data.endpoint_config import ConfigManager
+from zaparoo_label_automator.wrapper.twitch import TokenManager
+from zaparoo_label_automator.wrapper.generic import GenericRestAPI
+from zaparoo_label_automator.reference_data.endpoint_config import ConfigManager
 
 class DataCollector:
     """

@@ -7,7 +7,6 @@ from requests import (
     get
 )
 
-
 class TokenManager:
 
     _API_CREDENTIALS_FILE = "api_credentials.json"
