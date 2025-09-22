@@ -178,5 +178,15 @@
             "http_method": "POST",
             "body": "fields created_at,date,date_format,game,human,m,platform,release_region,status,updated_at,y; limit {{request_limit}}; sort id asc;"
         }
+    },
+    {
+        "name": "keywords",
+        "documentation_url": "https://api-docs.igdb.com/#keyword",
+        "properties": {
+            "endpoint_url": "https://api.igdb.com/v4/keywords",
+            "count_endpoint_url": "https://api.igdb.com/v4/keywords/count",
+            "http_method": "POST",
+            "body": "fields created_at,name,slug,updated_at,url; sort id asc;"
+        }
     }
 ]

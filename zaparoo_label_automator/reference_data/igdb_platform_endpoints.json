@@ -280,16 +280,6 @@
         }
     },
     {
-        "name": "keywords",
-        "documentation_url": "https://api-docs.igdb.com/#keyword",
-        "properties": {
-            "endpoint_url": "https://api.igdb.com/v4/keywords",
-            "count_endpoint_url": "https://api.igdb.com/v4/keywords/count",
-            "http_method": "POST",
-            "body": "fields created_at,name,slug,updated_at,url; sort id asc;"
-        }
-    },
-    {
         "name": "languages",
         "documentation_url": "https://api-docs.igdb.com/#language",
         "properties": {
