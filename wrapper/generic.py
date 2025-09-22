@@ -1,15 +1,12 @@
-import json
+from typing import Literal, Union, Optional
 import requests
-from typing import Literal, Union
-
-from wrapper.twitch import TokenManager
 
 
 class GenericRestAPI:
 
     def __init__(
         self,
-        timeout: int = None
+        timeout: Union[int, None] = None
     ):
         if timeout is None:
             self._timeout = 60
@@ -19,15 +16,15 @@ class GenericRestAPI:
     def request(
             self,
             method: Literal["GET", "POST", "PUT", "DELETE", "PATCH"],
-            url: str = None,
-            headers: dict = None,
+            url: Optional[str] = None,
+            headers: Optional[dict] = None,
             body: Union[str, dict, list, int, float, bool, None] = None
         ) -> dict:
         if headers is None or url is None:
             raise AttributeError(
                 "Error! Both headers and REST API URL must be supplied."
             )
-        
+
         if method is None:
             raise AttributeError(
                 "Error! HTTP method must be supplied."
@@ -35,7 +32,7 @@ class GenericRestAPI:
 
         # Build request parameters dynamically
         request_params = {"url": url, "headers": headers, "timeout": self._timeout}
-        
+
         # Handle body based on its type
         if body is not None:
             if isinstance(body, str):

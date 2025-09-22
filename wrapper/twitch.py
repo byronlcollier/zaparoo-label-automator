@@ -185,14 +185,14 @@ class TokenManager:
     def token_validation(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            self._token.initialise_token()
+            self.initialise_token()
             return func(self, *args, **kwargs)
         return wrapper
-    
+
     def get_header(self) -> dict:
         if self._client_id is None:
             self._read_credentials_from_file()
-        
+
         return {
             "Client-ID": self._client_id,
             "Authorization": f"Bearer {self.value}"

@@ -21,15 +21,15 @@ def main():
         print("=" * 55)
         
         # Initialize the IGDB reference data collector
-        collector = DataCollector(
+        platform_collector = DataCollector(
             config_path="./.config",
-            endpoints_file="./input/reference_data/api_endpoints.json.j2",
+            endpoints_file="./reference_data/igdb_platform_endpoints.json",
             output_dir="./output/reference_data/",
             batch_limit=UPPER_BATCH_LIMIT
         )
         
         # Collect all configured reference data
-        results = collector.collect_all_reference_data()
+        results = platform_collector.collect_all_reference_data()
         
         # Display summary
         stats = results['stats']
