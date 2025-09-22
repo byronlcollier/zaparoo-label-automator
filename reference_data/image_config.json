@@ -1,5 +1,6 @@
 {
-    "download_url": "https://images.igdb.com/igdb/image/upload/{{size_name}}/{{image_id}}.webp",
+    "base_url": "https://images.igdb.com/igdb/image/upload",
+    "file_format": "webp",
     "sizes": [
         {
             "name": "t_cover_small",
