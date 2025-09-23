@@ -8,6 +8,13 @@ GAMES_COUNT = 20
 OUTPUT_FOLDER = "output"
 CONFIG_PATH = "./.config"
 
+MEDIA_DOWNLOAD_CONFIG = {
+    "cover": True,
+    "platform_logo": True,
+    "screenshot": False,
+    "game_video": False # Only for future use, not currently implemented.
+}
+
 def main():
     print("Starting Zaparoo Label Automator...")
     
@@ -17,7 +24,8 @@ def main():
         games_count=GAMES_COUNT,
         output_folder=OUTPUT_FOLDER,
         config_path=CONFIG_PATH,
-        upper_batch_limit=UPPER_BATCH_LIMIT
+        upper_batch_limit=UPPER_BATCH_LIMIT,
+        media_download_config=MEDIA_DOWNLOAD_CONFIG
     )
     automator.run()
     

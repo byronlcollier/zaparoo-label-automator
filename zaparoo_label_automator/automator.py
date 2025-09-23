@@ -7,10 +7,11 @@ from datetime import datetime
 import pycountry
 from zaparoo_label_automator.wrapper.generic import GenericRestAPI
 from zaparoo_label_automator.wrapper.twitch import TokenManager
+from zaparoo_label_automator.image_downloader import ImageDownloader
 
 
 class ZaparooAutomator:
-    def __init__(self, platforms_file, games_count, output_folder, config_path, upper_batch_limit):
+    def __init__(self, platforms_file, games_count, output_folder, config_path, upper_batch_limit, media_download_config=None):
         self.platforms_file = platforms_file
         self.games_count = games_count
         self.upper_batch_limit = upper_batch_limit
@@ -18,6 +19,8 @@ class ZaparooAutomator:
         self.api_client = GenericRestAPI()
         self.platforms_data = []
         self.output_path = Path(output_folder)
+        self.media_download_config = media_download_config or {}
+        self.image_downloader = ImageDownloader(media_config=self.media_download_config)
         
     def run(self):
         """Main orchestration method"""
@@ -40,6 +43,9 @@ class ZaparooAutomator:
                 
             platform_info = platform_data[0]
             
+            # Post-process the platform data
+            processed_platform_info = self._post_process_platform_data(platform_info)
+            
             # Get games for this platform
             games_data = self._fetch_games_data(platform_id, self.games_count)
             
@@ -47,7 +53,7 @@ class ZaparooAutomator:
             processed_games_data = self._post_process_games_data(games_data)
             
             # Create output folder and files
-            self._create_platform_output(platform_info, processed_games_data)
+            self._create_platform_output(processed_platform_info, processed_games_data)
     
     def _clear_output_folder(self):
         """Clear contents of output folder"""
@@ -168,9 +174,9 @@ class ZaparooAutomator:
     
     def _create_platform_output(self, platform_info, games_data):
         """Create output folder and JSON files for a platform"""
-        # Use abbreviation for folder name, fallback to name or id
-        folder_name = (platform_info.get('abbreviation') or 
-                      platform_info.get('name', '') or 
+        # Use name for folder name, fallback to abbreviation or id
+        folder_name = (platform_info.get('name') or 
+                      platform_info.get('abbreviation', '') or 
                       str(platform_info.get('id', 'unknown')))
         
         # Ensure folder name is filesystem-safe
@@ -181,16 +187,145 @@ class ZaparooAutomator:
         platform_folder.mkdir(parents=True, exist_ok=True)
         
         # Write platform info JSON
-        platform_file = platform_folder / 'platform.json'
+        platform_file = platform_folder / 'platform_info.json'
         with open(platform_file, 'w', encoding='utf-8') as f:
             json.dump(platform_info, f, indent=2, ensure_ascii=False)
         
-        # Write games info JSON
-        games_file = platform_folder / 'games.json'
-        with open(games_file, 'w', encoding='utf-8') as f:
-            json.dump(games_data, f, indent=2, ensure_ascii=False)
+        # Download platform images and get file paths
+        try:
+            platform_downloaded_files = self._download_platform_images(platform_info, platform_folder)
+            
+            # Add local file paths to platform data and write updated JSON
+            if platform_downloaded_files:
+                platform_info_with_paths = self.image_downloader.add_local_file_paths(platform_info, platform_downloaded_files)
+                # Rewrite the platform info with file paths
+                with open(platform_file, 'w', encoding='utf-8') as f:
+                    json.dump(platform_info_with_paths, f, indent=2, ensure_ascii=False)
+                    
+        except Exception as e:
+            platform_name = platform_info.get('name', 'unknown platform')
+            print(f"Error downloading platform images for {platform_name}: {str(e)}")
+            raise
+        
+        # Write individual JSON files for each game and download images
+        for game in games_data:
+            game_name = game.get('name', 'unknown_game')
+            # Sanitize game name for filename
+            game_filename = self._sanitize_folder_name(game_name)
+            
+            # Create game subfolder
+            game_folder = platform_folder / game_filename
+            game_folder.mkdir(parents=True, exist_ok=True)
+            
+            # Download images for this game first
+            try:
+                downloaded_files = self.image_downloader.download_all_images(game, game_folder)
+                
+                # Add local file paths to the game data
+                game_with_paths = self.image_downloader.add_local_file_paths(game, downloaded_files)
+                
+                # Write game JSON file with local file paths
+                game_file = game_folder / f'{game_filename}.json'
+                with open(game_file, 'w', encoding='utf-8') as f:
+                    json.dump(game_with_paths, f, indent=2, ensure_ascii=False)
+                    
+            except Exception as e:
+                print(f"Error downloading images for {game_name}: {str(e)}")
+                raise
         
         print(f"Created output for {folder_name}: {len(games_data)} games")
+    
+    def _download_platform_images(self, platform_info, platform_folder):
+        """Download images for platform based on media configuration"""
+        if not self.media_download_config.get('platform_logo', False):
+            return {}
+        
+        # Get the best platform logo based on release date preferences
+        best_logo = self._select_best_platform_logo(platform_info)
+        
+        if best_logo:
+            try:
+                # Build image URL using direct mapping
+                url = self.image_downloader.build_image_url('platform_logo', best_logo['image_id'])
+                
+                # Build filename for platform logo
+                platform_name = platform_info.get('name', 'platform')
+                sanitized_name = self._sanitize_folder_name(platform_name)
+                filename = f"{sanitized_name}_platform_logo_{best_logo['image_id']}.webp"
+                filepath = platform_folder / filename
+                
+                # Download the image
+                self.image_downloader.download_image(url, filepath)
+                
+                print(f"Downloaded platform logo for {platform_name}")
+                
+                # Return mapping of image_id to filename
+                return {best_logo['image_id']: filename}
+                
+            except Exception as e:
+                platform_name = platform_info.get('name', 'unknown platform')
+                raise Exception(f"Failed to download platform logo for {platform_name}: {str(e)}")
+        
+        return {}
+    
+    def _select_best_platform_logo(self, platform_info):
+        """Select the best platform logo based on release date and region preferences"""
+        versions = platform_info.get('versions', [])
+        if not versions:
+            return None
+        
+        # Collect all versions that have platform logos
+        logo_candidates = []
+        
+        for version in versions:
+            platform_logo = version.get('platform_logo')
+            if not platform_logo or not platform_logo.get('image_id'):
+                continue
+            
+            # Get release dates for this version
+            release_dates = version.get('platform_version_release_dates', [])
+            
+            for release_date in release_dates:
+                # Convert date if it's still a timestamp
+                date_value = release_date.get('date')
+                if isinstance(date_value, (int, float)):
+                    date_value = self._convert_unix_to_date(date_value)
+                
+                region = release_date.get('release_region', {}).get('region', '').lower()
+                
+                logo_candidates.append({
+                    'platform_logo': platform_logo,
+                    'date': date_value,
+                    'region': region,
+                    'version_name': version.get('name', 'unknown')
+                })
+        
+        if not logo_candidates:
+            return None
+        
+        # First preference: earliest Europe release
+        europe_releases = [c for c in logo_candidates if c['region'] == 'europe']
+        if europe_releases:
+            # Sort by date (string format YYYY-MM-DD works for sorting)
+            europe_releases.sort(key=lambda x: x['date'] or '9999-12-31')
+            selected = europe_releases[0]
+            print(f"Selected platform logo from Europe release: {selected['version_name']} ({selected['date']})")
+            return selected['platform_logo']
+        
+        # Second preference: earliest Japan release
+        japan_releases = [c for c in logo_candidates if c['region'] == 'japan']
+        if japan_releases:
+            # Sort by date (string format YYYY-MM-DD works for sorting)
+            japan_releases.sort(key=lambda x: x['date'] or '9999-12-31')
+            selected = japan_releases[0]
+            print(f"Selected platform logo from Japan release: {selected['version_name']} ({selected['date']})")
+            return selected['platform_logo']
+        
+        # Third preference: earliest release overall
+        logo_candidates.sort(key=lambda x: x['date'] or '9999-12-31')
+        selected = logo_candidates[0]
+        print(f"Selected platform logo from earliest release: {selected['version_name']} ({selected['date']}) - {selected['region']}")
+        return selected['platform_logo']
     
     def _sanitize_folder_name(self, name):
         """Sanitize folder name to be filesystem-safe"""
@@ -217,6 +352,13 @@ class ZaparooAutomator:
             processed_games.append(processed_game)
         
         return processed_games
+    
+    def _post_process_platform_data(self, platform_data):
+        """Post-process platform data to convert dates and country codes"""
+        if not platform_data:
+            return platform_data
+        
+        return self._process_game_fields(platform_data)
     
     def _process_game_fields(self, obj):
         """Recursively process game fields to convert dates and country codes"""
