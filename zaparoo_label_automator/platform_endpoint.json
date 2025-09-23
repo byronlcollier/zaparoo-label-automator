@@ -5,6 +5,6 @@
         "endpoint_url": "https://api.igdb.com/v4/platforms",
         "count_endpoint_url": "https://api.igdb.com/v4/platforms/count",
         "http_method": "POST",
-        "body": "fields id,name,abbreviation,alternative_name,generation,url,platform_family.name,platform_type.name,versions.name,versions.platform_logo.alpha_channel,versions.platform_logo.animated,versions.platform_logo.width,versions.platform_logo.height,versions.platform_logo.image_id,versions.platform_version_release_dates.date,versions.platform_version_release_dates.release_region.region,versions.summary,versions.url; where id = (25,63,26,373,59,33,22,79,80,4,18,7,30,64,35,32,19,86,150); sort id asc; limit 500;"
+        "body": "fields id,name,abbreviation,alternative_name,generation,url,platform_family.name,platform_type.name,versions.name,versions.platform_logo.alpha_channel,versions.platform_logo.animated,versions.platform_logo.width,versions.platform_logo.height,versions.platform_logo.image_id,versions.platform_version_release_dates.date,versions.platform_version_release_dates.release_region.region,versions.summary,versions.url; sort id asc;"
     }
 }

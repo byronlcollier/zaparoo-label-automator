@@ -1,22 +1,22 @@
-Name
-Amstrad CPC
-Atari ST/STe
-BBC Micro
-ZX Spectrum
-ZX81
-Atari 2600
-Atari Lynx
-Game Boy
-Game Boy Color
-Game Boy Advance
-Neo Geo AES
-Neo Geo MVS
-Nintendo 64
-Nintendo Entertainment System
-PlayStation
-Sega 32X
-Sega Master System/Mark III
-Sega Game Gear
-Sega Saturn
-Super Nintendo Entertainment System
-TurboGrafx-16/PC Engine
+Name, id
+Amstrad CPC, 25
+Atari ST/STe, 63
+BBC Micro, 69
+ZX Spectrum, 26
+ZX81, 373
+Atari 2600, 59
+Atari Lynx, 61
+Game Boy, 33
+Game Boy Color, 22
+Game Boy Advance, 24
+Neo Geo AES, 80
+Neo Geo MVS, 79
+Nintendo 64, 4
+Nintendo Entertainment System, 18
+PlayStation, 7
+Sega 32X, 30
+Sega Master System/Mark III, 64
+Sega Game Gear, 35
+Sega Saturn, 32
+Super Nintendo Entertainment System, 19
+TurboGrafx-16/PC Engine, 86
