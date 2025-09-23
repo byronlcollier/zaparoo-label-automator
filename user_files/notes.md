@@ -1,3 +1,5 @@
 # Notes
 
-TOO COMPLICATED START AGAIN
+There are no notes.
+
+Cool.
