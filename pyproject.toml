@@ -3,6 +3,7 @@ name = "zaparoo-label-automator"
 version = "0.1.0"
 description = "Automating creation of labels for zaparoo using IGDB"
 readme = "README.md"
+license = {text = "CC-BY-NC-4.0"}
 requires-python = ">=3.12"
 dependencies = [
     "requests>=2.32.5",
