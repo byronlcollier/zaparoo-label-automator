@@ -208,16 +208,6 @@ class ImageDownloader:
         if not images:
             return {}
         
-        # Group images by type for summary reporting
-        image_counts = {}
-        for parent_name, image_obj in images:
-            image_counts[parent_name] = image_counts.get(parent_name, 0) + 1
-        
-        # Print summary of what will be downloaded
-        game_name = game_data.get('name', 'unknown game')
-        for image_type, count in image_counts.items():
-            print(f"Processing {count} {image_type} image{'s' if count != 1 else ''} for {game_name}")
-        
         downloaded_files = {}
         
         for parent_name, image_obj in images:

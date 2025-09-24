@@ -119,7 +119,15 @@ class ZaparooAutomator:
     
     def _fetch_games_single(self, platform_id, limit, config):
         """Fetch games in a single request"""
-        query_body = f"{config['properties']['body']} where platforms = ({platform_id}); limit {limit};"
+        # Parse the base body and combine where clauses properly
+        base_body = config['properties']['body']
+        if 'where' in base_body:
+            # Insert the platform filter into existing where clause with AND
+            query_body = base_body.replace('where ', f'where platforms = ({platform_id}) & ')
+        else:
+            # No existing where clause, add one
+            query_body = f"{base_body} where platforms = ({platform_id});"
+        query_body += f" limit {limit};"
         
         # Ensure token is valid
         self.token_manager.initialise_token()
@@ -146,7 +154,15 @@ class ZaparooAutomator:
         while offset < total_limit:
             batch_limit = min(self.upper_batch_limit, total_limit - offset)
             
-            query_body = f"{config['properties']['body']} where platforms = ({platform_id}); limit {batch_limit}; offset {offset};"
+            # Parse the base body and combine where clauses properly
+            base_body = config['properties']['body']
+            if 'where' in base_body:
+                # Insert the platform filter into existing where clause with AND
+                query_body = base_body.replace('where ', f'where platforms = ({platform_id}) & ')
+            else:
+                # No existing where clause, add one
+                query_body = f"{base_body} where platforms = ({platform_id});"
+            query_body += f" limit {batch_limit}; offset {offset};"
             
             # Ensure token is valid
             self.token_manager.initialise_token()
@@ -208,6 +224,7 @@ class ZaparooAutomator:
             raise
         
         # Write individual JSON files for each game and download images
+        games_processed = 0
         for game in games_data:
             game_name = game.get('name', 'unknown_game')
             # Sanitize game name for filename
@@ -228,12 +245,14 @@ class ZaparooAutomator:
                 game_file = game_folder / f'{game_filename}.json'
                 with open(game_file, 'w', encoding='utf-8') as f:
                     json.dump(game_with_paths, f, indent=2, ensure_ascii=False)
+                
+                games_processed += 1
                     
             except Exception as e:
                 print(f"Error downloading images for {game_name}: {str(e)}")
                 raise
         
-        print(f"Created output for {folder_name}: {len(games_data)} games")
+        print(f"Created output for {folder_name}: {games_processed} games")
     
     def _download_platform_images(self, platform_info, platform_folder):
         """Download images for platform based on media configuration"""
@@ -257,8 +276,6 @@ class ZaparooAutomator:
                 # Download the image
                 self.image_downloader.download_image(url, filepath)
                 
-                print(f"Downloaded platform logo for {platform_name}")
-                
                 # Return mapping of image_id to filename
                 return {best_logo['image_id']: filename}
                 
@@ -276,6 +293,7 @@ class ZaparooAutomator:
         
         # Collect all versions that have platform logos
         logo_candidates = []
+        fallback_logos = []  # For versions without release dates
         
         for version in versions:
             platform_logo = version.get('platform_logo')
@@ -285,47 +303,61 @@ class ZaparooAutomator:
             # Get release dates for this version
             release_dates = version.get('platform_version_release_dates', [])
             
-            for release_date in release_dates:
-                # Convert date if it's still a timestamp
-                date_value = release_date.get('date')
-                if isinstance(date_value, (int, float)):
-                    date_value = self._convert_unix_to_date(date_value)
-                
-                region = release_date.get('release_region', {}).get('region', '').lower()
-                
-                logo_candidates.append({
+            if release_dates:
+                # Process versions with release dates
+                for release_date in release_dates:
+                    # Convert date if it's still a timestamp
+                    date_value = release_date.get('date')
+                    if isinstance(date_value, (int, float)):
+                        date_value = self._convert_unix_to_date(date_value)
+                    
+                    region = release_date.get('release_region', {}).get('region', '').lower()
+                    
+                    logo_candidates.append({
+                        'platform_logo': platform_logo,
+                        'date': date_value,
+                        'region': region,
+                        'version_name': version.get('name', 'unknown')
+                    })
+            else:
+                # Collect versions without release dates as fallback
+                fallback_logos.append({
                     'platform_logo': platform_logo,
-                    'date': date_value,
-                    'region': region,
+                    'date': None,
+                    'region': 'unknown',
                     'version_name': version.get('name', 'unknown')
                 })
         
-        if not logo_candidates:
-            return None
-        
-        # First preference: earliest Europe release
-        europe_releases = [c for c in logo_candidates if c['region'] == 'europe']
-        if europe_releases:
-            # Sort by date (string format YYYY-MM-DD works for sorting)
-            europe_releases.sort(key=lambda x: x['date'] or '9999-12-31')
-            selected = europe_releases[0]
-            print(f"Selected platform logo from Europe release: {selected['version_name']} ({selected['date']})")
+        # If we have candidates with release dates, use the existing logic
+        if logo_candidates:
+            # First preference: earliest Europe release
+            europe_releases = [c for c in logo_candidates if c['region'] == 'europe']
+            if europe_releases:
+                # Sort by date (string format YYYY-MM-DD works for sorting)
+                europe_releases.sort(key=lambda x: x['date'] or '9999-12-31')
+                selected = europe_releases[0]
+                return selected['platform_logo']
+            
+            # Second preference: earliest Japan release
+            japan_releases = [c for c in logo_candidates if c['region'] == 'japan']
+            if japan_releases:
+                # Sort by date (string format YYYY-MM-DD works for sorting)
+                japan_releases.sort(key=lambda x: x['date'] or '9999-12-31')
+                selected = japan_releases[0]
+                return selected['platform_logo']
+            
+            # Third preference: earliest release overall
+            logo_candidates.sort(key=lambda x: x['date'] or '9999-12-31')
+            selected = logo_candidates[0]
             return selected['platform_logo']
         
-        # Second preference: earliest Japan release
-        japan_releases = [c for c in logo_candidates if c['region'] == 'japan']
-        if japan_releases:
-            # Sort by date (string format YYYY-MM-DD works for sorting)
-            japan_releases.sort(key=lambda x: x['date'] or '9999-12-31')
-            selected = japan_releases[0]
-            print(f"Selected platform logo from Japan release: {selected['version_name']} ({selected['date']})")
-            return selected['platform_logo']
+        # If no candidates with release dates, use fallback logos (versions without dates)
+        if fallback_logos:
+            # Just return the first available logo
+            return fallback_logos[0]['platform_logo']
         
-        # Third preference: earliest release overall
-        logo_candidates.sort(key=lambda x: x['date'] or '9999-12-31')
-        selected = logo_candidates[0]
-        print(f"Selected platform logo from earliest release: {selected['version_name']} ({selected['date']}) - {selected['region']}")
-        return selected['platform_logo']
+        # No logo found at all
+        return None
     
     def _sanitize_folder_name(self, name):
         """Sanitize folder name to be filesystem-safe"""

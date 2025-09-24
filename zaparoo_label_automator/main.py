@@ -1,5 +1,6 @@
 import sys
 from zaparoo_label_automator.automator import ZaparooAutomator
+from zaparoo_label_automator.label_generator import LabelGenerator
 
 # Configuration variables
 UPPER_BATCH_LIMIT = 500
@@ -7,6 +8,8 @@ PLATFORMS_FILE = "user_files/platforms.csv"
 GAMES_COUNT = 20
 OUTPUT_FOLDER = "output"
 CONFIG_PATH = "./.config"
+LABEL_DPI = 300  # DPI for PNG and PDF label generation
+SVG_TEMPLATE_PATH = "user_files/fossHuCardLabel.svg"  # SVG template for label generation
 
 MEDIA_DOWNLOAD_CONFIG = {
     "cover": True,
@@ -28,7 +31,26 @@ def main():
         media_download_config=MEDIA_DOWNLOAD_CONFIG
     )
     automator.run()
+
+    label_output_folder = OUTPUT_FOLDER + "/labels"
     
+    print("Data collection complete! Generating labels...")
+    
+    # Generate labels for all platforms
+    label_generator = LabelGenerator(template_path=SVG_TEMPLATE_PATH, dpi=LABEL_DPI)
+    
+    from pathlib import Path
+    output_path = Path(OUTPUT_FOLDER)
+    label_output_path = Path(label_output_folder)
+    
+    for platform_folder in output_path.iterdir():
+        if platform_folder.is_dir():
+            try:
+                label_generator.generate_labels_for_platform(platform_folder, label_output_path)
+            except Exception as e:
+                print(f"Error generating labels for {platform_folder.name}: {str(e)}")
+    
+    print("Label generation complete!")
     print("Automation complete!")
 
 
