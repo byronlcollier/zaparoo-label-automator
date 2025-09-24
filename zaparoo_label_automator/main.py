@@ -10,6 +10,7 @@ OUTPUT_FOLDER = "output"
 CONFIG_PATH = "./.config"
 LABEL_DPI = 300  # DPI for PNG and PDF label generation
 SVG_TEMPLATE_PATH = "user_files/fossHuCardLabel.svg"  # SVG template for label generation
+LABEL_OUTPUT_FORMATS = ["png"] # allowed values are currently either "png", "pdf", or both
 
 MEDIA_DOWNLOAD_CONFIG = {
     "cover": True,
@@ -37,7 +38,7 @@ def main():
     print("Data collection complete! Generating labels...")
     
     # Generate labels for all platforms
-    label_generator = LabelGenerator(template_path=SVG_TEMPLATE_PATH, dpi=LABEL_DPI)
+    label_generator = LabelGenerator(template_path=SVG_TEMPLATE_PATH, dpi=LABEL_DPI, output_formats=LABEL_OUTPUT_FORMATS)
     
     from pathlib import Path
     output_path = Path(OUTPUT_FOLDER)

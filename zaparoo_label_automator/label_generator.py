@@ -13,16 +13,19 @@ import io
 class LabelGenerator:
     """Generates labels by substituting images in SVG templates and converting to PNG/PDF."""
     
-    def __init__(self, template_path, dpi=300):
+    def __init__(self, template_path, dpi=300, output_formats=None):
         """
         Initialize the label generator.
         
         Args:
             template_path (str): Path to the SVG template file
             dpi (int): DPI for output image conversion (default: 300)
+            output_formats (list): List of output formats to generate (default: ['png', 'pdf'])
+                                 Supported formats: 'png', 'pdf'
         """
         self.template_path = Path(template_path)
         self.dpi = dpi
+        self.output_formats = output_formats or ['png', 'pdf']
         
         if not self.template_path.exists():
             raise FileNotFoundError(f"SVG template not found: {template_path}")
@@ -211,13 +214,14 @@ class LabelGenerator:
         sanitized_game = self._sanitize_filename(game_name)
         filename_base = f"{sanitized_platform}_{sanitized_game}_label"
         
-        # Generate PNG
-        png_path = output_folder / f"{filename_base}.png"
-        self._svg_to_png(modified_svg, png_path)
+        # Generate specified output formats
+        if 'png' in self.output_formats:
+            png_path = output_folder / f"{filename_base}.png"
+            self._svg_to_png(modified_svg, png_path)
         
-        # Generate PDF
-        pdf_path = output_folder / f"{filename_base}.pdf"
-        self._svg_to_pdf(modified_svg, pdf_path)
+        if 'pdf' in self.output_formats:
+            pdf_path = output_folder / f"{filename_base}.pdf"
+            self._svg_to_pdf(modified_svg, pdf_path)
     
     def _find_element_by_id(self, root, element_id):
         """
