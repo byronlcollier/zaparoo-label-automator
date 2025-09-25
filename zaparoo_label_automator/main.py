@@ -1,6 +1,7 @@
 import sys
 from zaparoo_label_automator.automator import ZaparooAutomator
 from zaparoo_label_automator.label_generator import LabelGenerator
+from zaparoo_label_automator.catalogue_generator import CatalogueGenerator
 
 # Configuration variables
 UPPER_BATCH_LIMIT = 500
@@ -32,8 +33,6 @@ def main():
         media_download_config=MEDIA_DOWNLOAD_CONFIG
     )
     automator.run()
-
-    label_output_folder = OUTPUT_FOLDER + "/labels"
     
     print("Data collection complete! Generating labels...")
     
@@ -42,16 +41,33 @@ def main():
     
     from pathlib import Path
     output_path = Path(OUTPUT_FOLDER)
-    label_output_path = Path(label_output_folder)
+    detail_path = output_path / "detail"
+    labels_path = output_path / "labels"
     
-    for platform_folder in output_path.iterdir():
+    # Create labels folder if it doesn't exist
+    labels_path.mkdir(parents=True, exist_ok=True)
+    
+    for platform_folder in detail_path.iterdir():
         if platform_folder.is_dir():
             try:
-                label_generator.generate_labels_for_platform(platform_folder, label_output_path)
+                label_generator.generate_labels_for_platform(platform_folder, labels_path)
             except Exception as e:
                 print(f"Error generating labels for {platform_folder.name}: {str(e)}")
     
     print("Label generation complete!")
+    
+    print("Generating catalogues...")
+    
+    # Generate PDF catalogues for all platforms
+    catalogue_generator = CatalogueGenerator()
+    catalogue_path = output_path / "catalogue"
+    
+    # Create catalogue folder if it doesn't exist
+    catalogue_path.mkdir(parents=True, exist_ok=True)
+    
+    catalogues_generated = catalogue_generator.generate_catalogues_for_all_platforms(detail_path, catalogue_path)
+    print(f"Generated {catalogues_generated} catalogues")
+    
     print("Automation complete!")
 
 

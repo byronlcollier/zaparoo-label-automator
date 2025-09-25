@@ -19,6 +19,10 @@ class ZaparooAutomator:
         self.api_client = GenericRestAPI()
         self.platforms_data = []
         self.output_path = Path(output_folder)
+        # Create the three main output subfolders
+        self.detail_path = self.output_path / "detail"
+        self.labels_path = self.output_path / "labels"
+        self.catalogue_path = self.output_path / "catalogue"
         self.media_download_config = media_download_config or {}
         self.image_downloader = ImageDownloader(media_config=self.media_download_config)
         
@@ -198,8 +202,8 @@ class ZaparooAutomator:
         # Ensure folder name is filesystem-safe
         folder_name = self._sanitize_folder_name(folder_name)
         
-        # Create platform subfolder
-        platform_folder = self.output_path / folder_name
+        # Create platform subfolder in the detail directory
+        platform_folder = self.detail_path / folder_name
         platform_folder.mkdir(parents=True, exist_ok=True)
         
         # Write platform info JSON
@@ -207,9 +211,9 @@ class ZaparooAutomator:
         with open(platform_file, 'w', encoding='utf-8') as f:
             json.dump(platform_info, f, indent=2, ensure_ascii=False)
         
-        # Download platform images and get file paths
+        # Download ALL platform images (no selection logic in phase 1)
         try:
-            platform_downloaded_files = self._download_platform_images(platform_info, platform_folder)
+            platform_downloaded_files = self.image_downloader.download_all_images_recursive(platform_info, platform_folder)
             
             # Add local file paths to platform data and write updated JSON
             if platform_downloaded_files:
@@ -234,9 +238,9 @@ class ZaparooAutomator:
             game_folder = platform_folder / game_filename
             game_folder.mkdir(parents=True, exist_ok=True)
             
-            # Download images for this game first
+            # Download ALL images for this game (no media config filtering in phase 1)
             try:
-                downloaded_files = self.image_downloader.download_all_images(game, game_folder)
+                downloaded_files = self.image_downloader.download_all_images_recursive(game, game_folder)
                 
                 # Add local file paths to the game data
                 game_with_paths = self.image_downloader.add_local_file_paths(game, downloaded_files)
@@ -254,110 +258,9 @@ class ZaparooAutomator:
         
         print(f"Created output for {folder_name}: {games_processed} games")
     
-    def _download_platform_images(self, platform_info, platform_folder):
-        """Download images for platform based on media configuration"""
-        if not self.media_download_config.get('platform_logo', False):
-            return {}
-        
-        # Get the best platform logo based on release date preferences
-        best_logo = self._select_best_platform_logo(platform_info)
-        
-        if best_logo:
-            try:
-                # Build image URL using direct mapping
-                url = self.image_downloader.build_image_url('platform_logo', best_logo['image_id'])
-                
-                # Build filename for platform logo
-                platform_name = platform_info.get('name', 'platform')
-                sanitized_name = self._sanitize_folder_name(platform_name)
-                filename = f"{sanitized_name}_platform_logo_{best_logo['image_id']}.webp"
-                filepath = platform_folder / filename
-                
-                # Download the image
-                self.image_downloader.download_image(url, filepath)
-                
-                # Return mapping of image_id to filename
-                return {best_logo['image_id']: filename}
-                
-            except Exception as e:
-                platform_name = platform_info.get('name', 'unknown platform')
-                raise Exception(f"Failed to download platform logo for {platform_name}: {str(e)}")
-        
-        return {}
+    # Platform image downloading logic removed - now downloads ALL images in phase 1
     
-    def _select_best_platform_logo(self, platform_info):
-        """Select the best platform logo based on release date and region preferences"""
-        versions = platform_info.get('versions', [])
-        if not versions:
-            return None
-        
-        # Collect all versions that have platform logos
-        logo_candidates = []
-        fallback_logos = []  # For versions without release dates
-        
-        for version in versions:
-            platform_logo = version.get('platform_logo')
-            if not platform_logo or not platform_logo.get('image_id'):
-                continue
-            
-            # Get release dates for this version
-            release_dates = version.get('platform_version_release_dates', [])
-            
-            if release_dates:
-                # Process versions with release dates
-                for release_date in release_dates:
-                    # Convert date if it's still a timestamp
-                    date_value = release_date.get('date')
-                    if isinstance(date_value, (int, float)):
-                        date_value = self._convert_unix_to_date(date_value)
-                    
-                    region = release_date.get('release_region', {}).get('region', '').lower()
-                    
-                    logo_candidates.append({
-                        'platform_logo': platform_logo,
-                        'date': date_value,
-                        'region': region,
-                        'version_name': version.get('name', 'unknown')
-                    })
-            else:
-                # Collect versions without release dates as fallback
-                fallback_logos.append({
-                    'platform_logo': platform_logo,
-                    'date': None,
-                    'region': 'unknown',
-                    'version_name': version.get('name', 'unknown')
-                })
-        
-        # If we have candidates with release dates, use the existing logic
-        if logo_candidates:
-            # First preference: earliest Europe release
-            europe_releases = [c for c in logo_candidates if c['region'] == 'europe']
-            if europe_releases:
-                # Sort by date (string format YYYY-MM-DD works for sorting)
-                europe_releases.sort(key=lambda x: x['date'] or '9999-12-31')
-                selected = europe_releases[0]
-                return selected['platform_logo']
-            
-            # Second preference: earliest Japan release
-            japan_releases = [c for c in logo_candidates if c['region'] == 'japan']
-            if japan_releases:
-                # Sort by date (string format YYYY-MM-DD works for sorting)
-                japan_releases.sort(key=lambda x: x['date'] or '9999-12-31')
-                selected = japan_releases[0]
-                return selected['platform_logo']
-            
-            # Third preference: earliest release overall
-            logo_candidates.sort(key=lambda x: x['date'] or '9999-12-31')
-            selected = logo_candidates[0]
-            return selected['platform_logo']
-        
-        # If no candidates with release dates, use fallback logos (versions without dates)
-        if fallback_logos:
-            # Just return the first available logo
-            return fallback_logos[0]['platform_logo']
-        
-        # No logo found at all
-        return None
+    # Platform logo selection logic moved to label generator phase
     
     def _sanitize_folder_name(self, name):
         """Sanitize folder name to be filesystem-safe"""

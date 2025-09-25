@@ -46,6 +46,21 @@ class ImageDownloader:
         
         return images
     
+    def find_all_image_objects(self, data):
+        """
+        Find ALL image objects in data regardless of media configuration.
+        This recursively searches through the entire data structure for any object with an 'image_id' field.
+        
+        Args:
+            data (dict): The data from IGDB API
+            
+        Returns:
+            list: List of tuples (field_name, image_object)
+        """
+        images = []
+        self._recursive_extract_all_images(data, images)
+        return images
+    
     def _extract_images_from_field(self, game_data, field_name, images):
         """Extract images from a specific field in game data."""
         # Try both singular and plural forms of the field name
@@ -101,8 +116,36 @@ class ImageDownloader:
         Returns:
             bool: True if object contains image fields
         """
-        required_fields = {'image_id', 'width', 'height'}
-        return isinstance(obj, dict) and required_fields.issubset(obj.keys())
+        # For the "find all images" functionality, we only need image_id
+        # The original logic requires width/height too, but we'll be more lenient for finding all
+        return isinstance(obj, dict) and 'image_id' in obj
+    
+    def _recursive_extract_all_images(self, data, images, parent_path=""):
+        """
+        Recursively extract all image objects from data structure.
+        
+        Args:
+            data: The data to search (dict, list, or other)
+            images: List to append found images to
+            parent_path: Current path in the data structure for context
+        """
+        if isinstance(data, dict):
+            # Check if this dict is an image object
+            if self._is_image_object(data):
+                # Use the parent path or a generic name if at root
+                field_name = parent_path if parent_path else "image"
+                images.append((field_name, data))
+            else:
+                # Recursively search in all dict values
+                for key, value in data.items():
+                    new_path = f"{parent_path}_{key}" if parent_path else key
+                    self._recursive_extract_all_images(value, images, new_path)
+        
+        elif isinstance(data, list):
+            # Recursively search in all list items
+            for i, item in enumerate(data):
+                new_path = f"{parent_path}[{i}]" if parent_path else f"item[{i}]"
+                self._recursive_extract_all_images(item, images, new_path)
     
     def build_image_url(self, image_type, image_id):
         """
@@ -149,6 +192,30 @@ class ImageDownloader:
         
         # Build filename: parent_name + object_id + image_id + extension
         filename = f"{parent_name}_{obj_id}_{image_id}{extension}"
+        
+        # Sanitize filename
+        return self._sanitize_filename(filename)
+    
+    def build_simple_filename(self, image_type, image_obj):
+        """
+        Build a simplified filename for an image: image_type + numeric_id + image_id + extension.
+        
+        Args:
+            image_type (str): Type of image (e.g., 'cover', 'platform_logo', 'screenshot')
+            image_obj (dict): Image object containing id and image_id
+            
+        Returns:
+            str: Simple filename with extension
+        """
+        # Get the numeric ID and image ID
+        numeric_id = image_obj.get('id', 'unknown')
+        image_id = image_obj['image_id']
+        
+        # Get file extension
+        extension = self.config['file_format']
+        
+        # Build simple filename: image_type + numeric_id + image_id + extension
+        filename = f"{image_type}_{numeric_id}_{image_id}{extension}"
         
         # Sanitize filename
         return self._sanitize_filename(filename)
@@ -231,6 +298,82 @@ class ImageDownloader:
                               f"for {parent_name}: {str(e)}")
         
         return downloaded_files
+    
+    def download_all_images_recursive(self, data, output_folder):
+        """
+        Download images found in data to the specified folder.
+        Respects media configuration to selectively download enabled image types.
+        
+        Args:
+            data (dict): Data from IGDB API
+            output_folder (Path): Folder where to save images
+            
+        Returns:
+            dict: Mapping of image_id to relative file path for downloaded images
+            
+        Raises:
+            Exception: If any image download fails
+        """
+        images = self.find_all_image_objects(data)
+        
+        if not images:
+            return {}
+        
+        downloaded_files = {}
+        
+        for parent_name, image_obj in images:
+            try:
+                # Determine image type from parent name
+                image_type = self._determine_image_type(parent_name)
+                
+                # Check if this image type is enabled in media config
+                if not self.media_config.get(image_type, False):
+                    continue  # Skip disabled image types
+                
+                # Build image URL
+                url = self.build_image_url(image_type, image_obj['image_id'])
+                
+                # Build simplified filename
+                filename = self.build_simple_filename(image_type, image_obj)
+                filepath = output_folder / filename
+                
+                # Download image
+                self.download_image(url, filepath)
+                
+                # Store the relative path for this image_id
+                downloaded_files[image_obj['image_id']] = filename
+                
+            except Exception as e:
+                # Re-raise with more context as per requirements
+                raise Exception(f"Failed to download image {image_obj.get('image_id', 'unknown')} "
+                              f"for {parent_name}: {str(e)}")
+        
+        return downloaded_files
+    
+    def _determine_image_type(self, parent_name):
+        """
+        Determine the image type from the parent field name for URL building and media config filtering.
+        
+        Args:
+            parent_name (str): The field name where the image was found
+            
+        Returns:
+            str: The image type to use for URL building and media config checking
+        """
+        parent_lower = parent_name.lower()
+        
+        # Map field patterns to media config keys (which should match URL building types)
+        if 'cover' in parent_lower:
+            return 'cover'
+        elif 'logo' in parent_lower or 'platform' in parent_lower:
+            return 'platform_logo'
+        elif 'screenshot' in parent_lower:
+            return 'screenshot'
+        elif 'artwork' in parent_lower:
+            return 'artwork'
+        else:
+            # Default fallback - most unknown images are treated as screenshots
+            return 'screenshot'
     
     def add_local_file_paths(self, data, downloaded_files):
         """
