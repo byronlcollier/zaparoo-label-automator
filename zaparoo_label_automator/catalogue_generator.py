@@ -7,6 +7,7 @@ from pathlib import Path
 from datetime import datetime
 import weasyprint
 from jinja2 import Template
+from zaparoo_label_automator.platform_logo_selector import PlatformLogoSelector
 
 
 class CatalogueGenerator:
@@ -57,8 +58,8 @@ class CatalogueGenerator:
         }
         
         .platform-logo {
-            max-width: 200px;
-            max-height: 120px;
+            max-width: 400px;
+            max-height: 240px;
             margin: 20px auto;
             display: block;
             border-radius: 8px;
@@ -79,6 +80,7 @@ class CatalogueGenerator:
         
         .platform-versions {
             margin: 20px 0;
+            text-align: left;
         }
         
         .version-block {
@@ -107,20 +109,27 @@ class CatalogueGenerator:
         }
         
         .version-logo img {
-            max-width: 60px;
-            max-height: 40px;
+            max-width: 120px;
+            max-height: 80px;
             border-radius: 4px;
         }
         
         .version-details {
             flex-grow: 1;
-            font-size: 9pt;
+            font-size: 10pt;
             line-height: 1.5;
+            text-align: left;
         }
         
         .version-details ul {
             margin: 0;
             padding-left: 15px;
+        }
+        
+        .release-info {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
         }
         
         /* Games Section */
@@ -139,23 +148,23 @@ class CatalogueGenerator:
             letter-spacing: 1px;
         }
         
-        /* Game Grid Layout */
+        /* Game Grid Layout - Full width */
         .games-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            display: block;
             margin-bottom: 30px;
         }
         
         .game {
             display: flex;
-            gap: 15px;
-            padding: 15px;
+            gap: 20px;
+            padding: 20px;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             background: white;
             page-break-inside: avoid;
-            min-height: 120px;
+            min-height: 140px;
+            margin-bottom: 15px;
+            width: 100%;
         }
         
         .game:nth-child(odd) {
@@ -167,8 +176,8 @@ class CatalogueGenerator:
         }
         
         .game-cover img {
-            width: 60px;
-            height: 85px;
+            width: 120px;
+            height: 170px;
             object-fit: cover;
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
@@ -208,20 +217,12 @@ class CatalogueGenerator:
             overflow-wrap: break-word;
         }
         
-        /* Single column layout for long lists */
+        /* Ensure consistent high-quality image rendering */
         @media print {
-            .games-grid.single-column {
-                grid-template-columns: 1fr;
-            }
-            
-            .game.single-column {
-                flex-direction: row;
-                min-height: auto;
-            }
-            
-            .game.single-column .game-cover img {
-                width: 45px;
-                height: 65px;
+            img {
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+                image-rendering: pixelated;
             }
         }
         
@@ -266,14 +267,15 @@ class CatalogueGenerator:
                     {% endif %}
                     <div class="version-details">
                         {% if version.releases %}
+                        <div class="release-info">Release Information:</div>
                         <ul>
                         {% for release in version.releases %}
-                            <li>{{ release.date }} - {{ release.region }}</li>
+                            <li>{{ release.date }} - {{ release.region }}{% if release.additional_info %} - {{ release.additional_info }}{% endif %}</li>
                         {% endfor %}
                         </ul>
                         {% endif %}
                         {% if version.summary %}
-                        <p>{{ version.summary[:300] | safe }}{% if version.summary|length > 300 %}...{% endif %}</p>
+                        <p>{{ version.summary | safe }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -288,14 +290,14 @@ class CatalogueGenerator:
     <div class="games-section">
         <h2 class="section-header">Games Library ({{ games|length }} games)</h2>
         
-        <div class="games-grid {% if games|length > 50 %}single-column{% endif %}">
+        <div class="games-grid">
             {% for game in games %}
-            <div class="game {% if games|length > 50 %}single-column{% endif %}">
+            <div class="game">
                 <div class="game-cover">
                     {% if game.cover_path %}
                     <img src="{{ game.cover_path }}" alt="{{ game.name }} Cover">
                     {% else %}
-                    <div style="width: 60px; height: 85px; background: #f0f0f0; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 8pt; color: #999; text-align: center; border-radius: 4px;">No Cover</div>
+                    <div style="width: 120px; height: 170px; background: #f0f0f0; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 10pt; color: #999; text-align: center; border-radius: 4px;">No Cover</div>
                     {% endif %}
                 </div>
                 <div class="game-info">
@@ -307,7 +309,7 @@ class CatalogueGenerator:
                         {% if game.rating %}<strong>Rating:</strong> {{ game.rating }}/100{% endif %}
                     </div>
                     {% if game.summary %}
-                    <div class="game-summary">{{ game.summary[:200] | safe }}{% if game.summary|length > 200 %}...{% endif %}</div>
+                    <div class="game-summary">{{ game.summary | safe }}</div>
                     {% endif %}
                 </div>
             </div>
@@ -416,16 +418,18 @@ class CatalogueGenerator:
 
     def _extract_platform_data(self, platform_info, platform_folder):
         """Extract and format platform data."""
-        # Find platform logo
+        # Find platform logo using the platform logo selector
         platform_logo = None
-        for file in platform_folder.glob("platform_logo_*"):
-            if file.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
-                platform_logo = file.absolute().as_uri()
-                break
+        logo_path = PlatformLogoSelector.find_platform_logo_path(platform_info, platform_folder)
+        if logo_path:
+            platform_logo = logo_path.absolute().as_uri()
         
-        # Extract versions data
+        # Extract versions data and sort chronologically
+        raw_versions = platform_info.get('versions', [])
+        sorted_versions = PlatformLogoSelector.sort_versions_chronologically(raw_versions)
+        
         versions = []
-        for version in platform_info.get('versions', []):
+        for version in sorted_versions:
             version_data = {
                 'name': version.get('name', 'Unknown Version'),
                 'summary': self._process_text(version.get('summary', '')),
@@ -439,16 +443,28 @@ class CatalogueGenerator:
                 if logo_path.exists():
                     version_data['logo'] = logo_path.absolute().as_uri()
             
-            # Release info
-            for release in version.get('release_dates', []):
+            # Release info - use platform_version_release_dates for versions
+            for release in version.get('platform_version_release_dates', []):
                 if release.get('date'):
-                    date_str = self._format_date(release['date'])
+                    date_str = self._format_date_ordinal(release['date'])
                     region = release.get('release_region', {}).get('region', 'Unknown')
                     region_display = region.replace('_', ' ').title()
+                    
+                    # Add any additional release information
+                    additional_info = []
+                    if release.get('category'):
+                        additional_info.append(release['category'])
+                    if release.get('platform_version'):
+                        additional_info.append(release['platform_version'])
+                    
                     version_data['releases'].append({
                         'date': date_str,
-                        'region': region_display
+                        'region': region_display,
+                        'additional_info': ', '.join(additional_info) if additional_info else None
                     })
+            
+            # Sort releases by date for this version
+            version_data['releases'].sort(key=lambda x: x['date'])
             
             if version_data['releases'] or version_data['summary']:
                 versions.append(version_data)
@@ -487,7 +503,7 @@ class CatalogueGenerator:
                 game_info = {
                     'name': game_data.get('name', game_folder.name),
                     'cover_path': cover_path,
-                    'release_date': self._format_date(game_data.get('first_release_date')),
+                    'release_date': self._format_date_ordinal(game_data.get('first_release_date')),
                     'genres': [g.get('name', '') for g in game_data.get('genres', [])[:4]],  # Limit to 4
                     'developer': self._get_developer(game_data),
                     'summary': self._process_text(game_data.get('summary', '')),
@@ -503,6 +519,9 @@ class CatalogueGenerator:
             except Exception as e:
                 print(f"Warning: Could not process game {game_folder.name}: {str(e)}")
                 continue
+        
+        # Sort games by rating in descending order (highest rated first)
+        games.sort(key=lambda x: x['rating'] if x['rating'] is not None else 0, reverse=True)
         
         return games
     
@@ -526,6 +545,36 @@ class CatalogueGenerator:
             else:
                 # Unix timestamp
                 return datetime.fromtimestamp(timestamp).strftime('%B %Y')
+        except:
+            return str(timestamp)
+    
+    def _format_date_ordinal(self, timestamp):
+        """Format Unix timestamp or date string to ordinal date format (e.g., '1st January 2020')."""
+        if not timestamp:
+            return None
+        
+        def get_ordinal_suffix(day):
+            """Get the ordinal suffix for a day (st, nd, rd, th)."""
+            if 10 <= day % 100 <= 20:
+                suffix = 'th'
+            else:
+                suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+            return suffix
+        
+        try:
+            if isinstance(timestamp, str):
+                # Try parsing ISO date
+                date_obj = datetime.strptime(timestamp, '%Y-%m-%d')
+            else:
+                # Unix timestamp
+                date_obj = datetime.fromtimestamp(timestamp)
+            
+            day = date_obj.day
+            month = date_obj.strftime('%B')
+            year = date_obj.year
+            suffix = get_ordinal_suffix(day)
+            
+            return f"{day}{suffix} {month} {year}"
         except:
             return str(timestamp)
     

@@ -19,10 +19,6 @@ class ZaparooAutomator:
         self.api_client = GenericRestAPI()
         self.platforms_data = []
         self.output_path = Path(output_folder)
-        # Create the three main output subfolders
-        self.detail_path = self.output_path / "detail"
-        self.labels_path = self.output_path / "labels"
-        self.catalogue_path = self.output_path / "catalogue"
         self.media_download_config = media_download_config or {}
         self.image_downloader = ImageDownloader(media_config=self.media_download_config)
         
@@ -203,7 +199,7 @@ class ZaparooAutomator:
         folder_name = self._sanitize_folder_name(folder_name)
         
         # Create platform subfolder in the detail directory
-        platform_folder = self.detail_path / folder_name
+        platform_folder = self.output_path / folder_name
         platform_folder.mkdir(parents=True, exist_ok=True)
         
         # Write platform info JSON

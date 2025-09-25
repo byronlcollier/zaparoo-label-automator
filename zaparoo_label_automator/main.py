@@ -10,6 +10,13 @@ UPPER_BATCH_LIMIT = 500
 PLATFORMS_FILE = "user_files/platforms.csv"
 GAMES_COUNT = 50
 OUTPUT_FOLDER = "output"
+PATH_CONFIG = {
+    "core_folder": Path(OUTPUT_FOLDER),
+    "detail_path": Path(OUTPUT_FOLDER) / "detail",
+    "labels_path": Path(OUTPUT_FOLDER) / "labels",
+    "catalogue_path": Path(OUTPUT_FOLDER) / "catalogue",
+}
+
 CONFIG_PATH = "./.config"
 LABEL_DPI = 300  # DPI for PNG and PDF label generation
 SVG_TEMPLATE_PATH = "user_files/fossHuCardLabel.svg"  # SVG template for label generation
@@ -68,7 +75,7 @@ def run_information_gathering():
     automator = ZaparooAutomator(
         platforms_file=PLATFORMS_FILE,
         games_count=GAMES_COUNT,
-        output_folder=OUTPUT_FOLDER,
+        output_folder=PATH_CONFIG["detail_path"],
         config_path=CONFIG_PATH,
         upper_batch_limit=UPPER_BATCH_LIMIT,
         media_download_config=MEDIA_DOWNLOAD_CONFIG
@@ -82,16 +89,14 @@ def run_label_creation():
     """Run the label creation phase."""
     print("Starting label creation phase...")
     
-    output_path = Path(OUTPUT_FOLDER)
-    detail_path = output_path / "detail"
-    labels_path = output_path / "labels"
     
-    if not detail_path.exists():
-        print(f"Error: Detail path '{detail_path}' does not exist. Run information gathering phase first.")
+    
+    if not PATH_CONFIG["detail_path"].exists():
+        print(f"Error: Detail path '{PATH_CONFIG["detail_path"]}' does not exist. Run information gathering phase first.")
         return False
     
     # Create labels folder if it doesn't exist
-    labels_path.mkdir(parents=True, exist_ok=True)
+    PATH_CONFIG["labels_path"].mkdir(parents=True, exist_ok=True)
     
     label_generator = LabelGenerator(
         template_path=SVG_TEMPLATE_PATH,
@@ -99,10 +104,10 @@ def run_label_creation():
         output_formats=LABEL_OUTPUT_FORMATS,
     )
     
-    for platform_folder in detail_path.iterdir():
+    for platform_folder in PATH_CONFIG["detail_path"].iterdir():
         if platform_folder.is_dir():
             try:
-                label_generator.generate_labels_for_platform(platform_folder, labels_path)
+                label_generator.generate_labels_for_platform(platform_folder, PATH_CONFIG["labels_path"])
             except Exception as e:
                 print(f"Error generating labels for {platform_folder.name}: {str(e)}")
     
@@ -114,19 +119,15 @@ def run_catalogue_creation():
     """Run the catalogue creation phase."""
     print("Starting catalogue creation phase...")
     
-    output_path = Path(OUTPUT_FOLDER)
-    detail_path = output_path / "detail"
-    catalogue_path = output_path / "catalogue"
-    
-    if not detail_path.exists():
-        print(f"Error: Detail path '{detail_path}' does not exist. Run information gathering phase first.")
+    if not PATH_CONFIG["detail_path"].exists():
+        print(f"Error: Detail path '{PATH_CONFIG["detail_path"]}' does not exist. Run information gathering phase first.")
         return False
     
     # Create catalogue folder if it doesn't exist
-    catalogue_path.mkdir(parents=True, exist_ok=True)
+    PATH_CONFIG["catalogue_path"].mkdir(parents=True, exist_ok=True)
     
     catalogue_generator = CatalogueGenerator()
-    catalogues_generated = catalogue_generator.generate_catalogues_for_all_platforms(detail_path, catalogue_path)
+    catalogues_generated = catalogue_generator.generate_catalogues_for_all_platforms(PATH_CONFIG["detail_path"], PATH_CONFIG["catalogue_path"])
     print(f"Generated {catalogues_generated} catalogues")
     
     print("Catalogue creation complete!")
