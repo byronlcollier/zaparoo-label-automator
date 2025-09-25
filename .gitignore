@@ -212,3 +212,6 @@ __marimo__/
 .config
 # no need to include the results of the API query in the repo
 output
+# I hate these stupid files
+.DS_Store
+Thumbs.db
