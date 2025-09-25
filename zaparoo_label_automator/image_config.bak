@@ -2,8 +2,8 @@
     "base_url": "https://images.igdb.com/igdb/image/upload",
     "file_format": ".webp",
     "image_size_mapping": {
-        "cover": "t_original",
-        "platform_logo": "t_original",
-        "screenshot": "t_original"
+        "cover": "t_cover_big_2x",
+        "platform_logo": "t_720p",
+        "screenshot": "t_720p"
     }
 }
