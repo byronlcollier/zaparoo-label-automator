@@ -1,7 +1,15 @@
 # Notes & TODOs
 
-need to add screenshot handling for platforms & games
+need to add screenshot handling
 
 need to reduce margins, they look a little chonk
 
-need to reformat label generation - platform image should be centre-aligned within placeholder, may also want to add outline around 'universal nfc ... blah...'
+versions need to be in order of release
+
+take the 'cell outline away'
+
+bigger graphics
+
+left-align text
+
+add proper dates back
