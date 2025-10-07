@@ -99,7 +99,7 @@ Sega 32X,Console,S32X,True
 Sega CD/Mega-CD,Console,MegaCD,
 Sega Master System,Console,SMS,True
 Sega Game Gear,Console,SMS,True
-Sega Mega Drive/Genesis,Console,MegaDrive,
+Sega Mega Drive/Genesis,Console,MegaDrive,True
 Sega Saturn,Console,Saturn,True
 Super Game Boy,Console,SGB,
 Super Nintendo Entertainment System (SNES),Console,SNES,True

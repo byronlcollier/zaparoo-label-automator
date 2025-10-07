@@ -31,6 +31,71 @@ class LabelGenerator:
         if not self.template_path.exists():
             raise FileNotFoundError(f"SVG template not found: {template_path}")
     
+    def generate_labels_from_catalogue(self, catalogue_json_path, reference_data_path, label_output_folder):
+        """
+        Generate labels for games specified in the catalogue JSON.
+        
+        Args:
+            catalogue_json_path (Path): Path to catalogue JSON file
+            reference_data_path (Path): Path to reference data folder
+            label_output_folder (Path): Path to output folder for labels
+            
+        Returns:
+            int: Number of labels generated
+        """
+        catalogue_json_path = Path(catalogue_json_path)
+        reference_data_path = Path(reference_data_path)
+        label_output_folder = Path(label_output_folder)
+        
+        if not catalogue_json_path.exists():
+            raise FileNotFoundError(f"Catalogue JSON not found: {catalogue_json_path}")
+        
+        # Load catalogue data
+        with open(catalogue_json_path, 'r', encoding='utf-8') as f:
+            catalogue_data = json.load(f)
+        
+        # Create output folder
+        label_output_folder.mkdir(parents=True, exist_ok=True)
+        
+        total_labels_generated = 0
+        
+        # Process each platform in the catalogue
+        for platform_name, platform_data in catalogue_data['platforms'].items():
+            print(f"Generating labels for {platform_name}...")
+            
+            platform_folder = reference_data_path / platform_data['platform_folder']
+            if not platform_folder.exists():
+                print(f"Warning: Platform folder not found: {platform_folder}")
+                continue
+            
+            # Read platform info for logo
+            platform_info_file = platform_folder / 'platform_info.json'
+            if not platform_info_file.exists():
+                print(f"Warning: No platform_info.json found in {platform_folder}")
+                continue
+            
+            with open(platform_info_file, 'r', encoding='utf-8') as f:
+                platform_info = json.load(f)
+            
+            # Find platform logo
+            platform_logo_path = self._find_platform_logo(platform_info, platform_folder)
+            
+            # Generate labels for selected games only
+            platform_labels_generated = 0
+            for game_info in platform_data['games']:
+                game_folder_path = reference_data_path / game_info['game_folder_path']
+                if game_folder_path.exists():
+                    success = self._generate_game_label(game_folder_path, platform_logo_path, label_output_folder)
+                    if success:
+                        platform_labels_generated += 1
+                else:
+                    print(f"Warning: Game folder not found: {game_folder_path}")
+            
+            print(f"Generated {platform_labels_generated} labels for {platform_name}")
+            total_labels_generated += platform_labels_generated
+        
+        return total_labels_generated
+
     def generate_labels_for_platform(self, platform_folder, label_output_folder=None):
         """
         Generate labels for all games in a platform folder.
@@ -195,7 +260,7 @@ class LabelGenerator:
             self._substitute_image(root, cover_placeholder, cover_path, 'center')
         
         if platform_placeholder is not None and platform_logo_path:
-            self._substitute_image(root, platform_placeholder, platform_logo_path, 'left-middle')
+            self._substitute_image(root, platform_placeholder, platform_logo_path, 'center')
         
         # Convert modified SVG to string with proper XML declaration
         modified_svg = '<?xml version="1.0" encoding="UTF-8"?>\n' + ET.tostring(root, encoding='unicode')

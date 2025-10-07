@@ -4,12 +4,13 @@ Image downloader module for downloading images from IGDB.
 import json
 import requests
 from pathlib import Path
+from zaparoo_label_automator.image_cropper import ImageCropper
 
 
 class ImageDownloader:
     """Downloads images from IGDB based on game data."""
     
-    def __init__(self, config_path="zaparoo_label_automator/image_config.json", media_config=None):
+    def __init__(self, config_path, media_config=None):
         """Initialize with image configuration."""
         self.config_path = config_path
         self.config = self._load_config()
@@ -231,7 +232,7 @@ class ImageDownloader:
     
     def download_image(self, url, filepath):
         """
-        Download an image from URL to filepath.
+        Download an image from URL to filepath and automatically crop transparent borders.
         
         Args:
             url (str): URL to download from
@@ -250,6 +251,15 @@ class ImageDownloader:
             # Write image data
             with open(filepath, 'wb') as f:
                 f.write(response.content)
+            
+            # Automatically crop transparent borders from the downloaded image
+            try:
+                cropped = ImageCropper.crop_transparent_borders(filepath)
+                if cropped:
+                    print(f"  Cropped transparent borders from {filepath.name}")
+            except Exception as crop_error:
+                # Log the cropping error but don't fail the download
+                print(f"  Warning: Could not crop {filepath.name}: {str(crop_error)}")
                 
         except requests.RequestException as e:
             raise Exception(f"Failed to download image from {url}: {str(e)}")

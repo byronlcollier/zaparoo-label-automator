@@ -10,8 +10,8 @@ from zaparoo_label_automator.wrapper.twitch import TokenManager
 from zaparoo_label_automator.image_downloader import ImageDownloader
 
 
-class ZaparooAutomator:
-    def __init__(self, platforms_file, games_count, output_folder, config_path, upper_batch_limit, media_download_config=None):
+class IgdbScraper:
+    def __init__(self, platforms_file, games_count, output_folder, config_path, image_config_path, upper_batch_limit, media_download_config=None):
         self.platforms_file = platforms_file
         self.games_count = games_count
         self.upper_batch_limit = upper_batch_limit
@@ -20,12 +20,13 @@ class ZaparooAutomator:
         self.platforms_data = []
         self.output_path = Path(output_folder)
         self.media_download_config = media_download_config or {}
-        self.image_downloader = ImageDownloader(media_config=self.media_download_config)
+        self.image_downloader = ImageDownloader(config_path=image_config_path, media_config=self.media_download_config)
         
     def run(self):
         """Main orchestration method"""
         # Clear output folder
-        self._clear_output_folder()
+        # how 'bout we don't for now, 'cos this takes a WHILE now
+        # self._clear_output_folder()
         
         # Read platforms from CSV
         platforms = self._read_platforms_csv()
