@@ -1,10 +1,13 @@
 """
 Catalogue generator module for selecting games and creating catalogue references.
 Handles game selection logic and outputs JSON references for label generation.
+Also generates PDF catalogues for each platform.
 """
 import json
 from pathlib import Path
 from datetime import datetime
+from jinja2 import Environment, FileSystemLoader
+import weasyprint
 from zaparoo_label_automator.platform_logo_selector import PlatformLogoSelector
 
 
@@ -25,6 +28,11 @@ class CatalogueGenerator:
         """
         self.catalogue_games_count = catalogue_games_count
         self.global_game_platform_map = {}  # Track which platform each game was first released on
+        
+        # Set up Jinja2 template environment
+        template_dir = Path(__file__).parent
+        self.jinja_env = Environment(loader=FileSystemLoader(str(template_dir)))
+        self.template = self.jinja_env.get_template('catalogue_template.html')
     
     def generate_catalogues_for_all_platforms(self, reference_data_folder, catalogue_output_folder):
         """
@@ -364,3 +372,293 @@ class CatalogueGenerator:
         print(f"Wrote catalogue selection: {total_selected_games} games across {len(catalogue_data)} platforms")
         print(f"  - {total_first_release} first-release games ({100-duplicate_percentage:.1f}%)")
         print(f"  - {total_duplicates} duplicate games ({duplicate_percentage:.1f}%)")
+    
+    def generate_pdf_catalogues_from_json(self, catalogue_json_path, reference_data_folder, pdf_output_folder):
+        """
+        Generate PDF catalogues for each platform using the JSON catalogue.
+        
+        Args:
+            catalogue_json_path (Path): Path to catalogue JSON file
+            reference_data_folder (Path): Path to reference data folder
+            pdf_output_folder (Path): Path to output folder for PDF catalogues
+            
+        Returns:
+            int: Number of PDFs generated
+        """
+        catalogue_json_path = Path(catalogue_json_path)
+        reference_data_folder = Path(reference_data_folder)
+        pdf_output_folder = Path(pdf_output_folder)
+        
+        if not catalogue_json_path.exists():
+            print(f"Catalogue JSON not found: {catalogue_json_path}")
+            return 0
+        
+        # Load catalogue data
+        with open(catalogue_json_path, 'r', encoding='utf-8') as f:
+            catalogue_data = json.load(f)
+        
+        # Create PDF output folder
+        pdf_output_folder.mkdir(parents=True, exist_ok=True)
+        
+        pdfs_generated = 0
+        
+        # Generate PDF for each platform
+        for platform_name, platform_selection in catalogue_data['platforms'].items():
+            print(f"Generating PDF catalogue for {platform_name}...")
+            
+            platform_folder = reference_data_folder / platform_selection['platform_folder']
+            if not platform_folder.exists():
+                print(f"Warning: Platform folder not found: {platform_folder}")
+                continue
+            
+            try:
+                success = self._generate_platform_pdf(
+                    platform_folder=platform_folder,
+                    platform_selection=platform_selection,
+                    reference_data_folder=reference_data_folder,
+                    pdf_output_folder=pdf_output_folder
+                )
+                if success:
+                    pdfs_generated += 1
+            except Exception as e:
+                print(f"Error generating PDF for {platform_name}: {str(e)}")
+        
+        return pdfs_generated
+    
+    def _generate_platform_pdf(self, platform_folder, platform_selection, reference_data_folder, pdf_output_folder):
+        """
+        Generate a PDF catalogue for a single platform.
+        
+        Args:
+            platform_folder (Path): Path to platform folder
+            platform_selection (dict): Platform selection data from JSON catalogue
+            reference_data_folder (Path): Path to reference data folder
+            pdf_output_folder (Path): Path to output folder for PDF
+            
+        Returns:
+            bool: True if successful
+        """
+        # Read platform info
+        platform_info_file = platform_folder / 'platform_info.json'
+        if not platform_info_file.exists():
+            print(f"Warning: No platform_info.json found in {platform_folder}")
+            return False
+        
+        with open(platform_info_file, 'r', encoding='utf-8') as f:
+            platform_info = json.load(f)
+        
+        # Extract platform data
+        platform_data = self._extract_platform_data(platform_info, platform_folder)
+        
+        # Collect games data for selected games only
+        games_data = self._collect_selected_games_data(platform_selection, reference_data_folder)
+        
+        # Generate HTML from template
+        html_content = self.template.render(
+            platform_name=platform_data['name'],
+            platform_logo=platform_data['logo'],
+            platform_summary=platform_data['summary'],
+            platform_versions=platform_data['versions'],
+            games=games_data,
+            generation_date=datetime.now().strftime('%B %d, %Y'),
+            total_games=len(games_data)
+        )
+        
+        # Generate PDF with WeasyPrint
+        pdf_filename = f"{self._sanitize_filename(platform_data['name'])}_Catalogue.pdf"
+        pdf_path = pdf_output_folder / pdf_filename
+        
+        try:
+            weasyprint.HTML(string=html_content).write_pdf(str(pdf_path))
+            print(f"Generated catalogue: {pdf_path}")
+            return True
+        except Exception as e:
+            print(f"Error generating PDF for {platform_folder.name}: {str(e)}")
+            return False
+    
+    def _extract_platform_data(self, platform_info, platform_folder):
+        """Extract and format platform data for PDF generation."""
+        # Find platform logo using the platform logo selector
+        platform_logo = None
+        logo_path = PlatformLogoSelector.find_platform_logo_path(platform_info, platform_folder)
+        if logo_path:
+            platform_logo = logo_path.absolute().as_uri()
+        
+        # Extract versions data and sort chronologically
+        raw_versions = platform_info.get('versions', [])
+        sorted_versions = PlatformLogoSelector.sort_versions_chronologically(raw_versions)
+        
+        versions = []
+        for version in sorted_versions:
+            version_data = {
+                'name': version.get('name', 'Unknown Version'),
+                'summary': self._process_text(version.get('summary', '')),
+                'logo': None,
+                'releases': []
+            }
+            
+            # Version logo
+            if version.get('platform_logo', {}).get('local_file_path'):
+                logo_path = platform_folder / version['platform_logo']['local_file_path']
+                if logo_path.exists():
+                    version_data['logo'] = logo_path.absolute().as_uri()
+            
+            # Release info - use platform_version_release_dates for versions
+            for release in version.get('platform_version_release_dates', []):
+                if release.get('date'):
+                    date_str = self._format_date_ordinal(release['date'])
+                    region = release.get('release_region', {}).get('region', 'Unknown')
+                    region_display = region.replace('_', ' ').title()
+                    
+                    # Add any additional release information
+                    additional_info = []
+                    if release.get('category'):
+                        additional_info.append(release['category'])
+                    if release.get('platform_version'):
+                        additional_info.append(release['platform_version'])
+                    
+                    version_data['releases'].append({
+                        'date': date_str,
+                        'region': region_display,
+                        'additional_info': ', '.join(additional_info) if additional_info else None
+                    })
+            
+            # Sort releases by date for this version
+            version_data['releases'].sort(key=lambda x: x['date'])
+            
+            if version_data['releases'] or version_data['summary']:
+                versions.append(version_data)
+        
+        return {
+            'name': platform_info.get('name', platform_folder.name),
+            'logo': platform_logo,
+            'summary': self._process_text(platform_info.get('summary', '')),
+            'versions': versions
+        }
+    
+    def _collect_selected_games_data(self, platform_selection, reference_data_folder):
+        """
+        Collect games data for selected games only.
+        
+        Args:
+            platform_selection (dict): Platform selection data from JSON catalogue
+            reference_data_folder (Path): Path to reference data folder
+            
+        Returns:
+            list: List of game data dictionaries
+        """
+        games = []
+        
+        for game_info in platform_selection['games']:
+            game_folder_path = reference_data_folder / game_info['game_folder_path']
+            
+            if not game_folder_path.exists():
+                continue
+            
+            game_json_file = game_folder_path / f"{game_folder_path.name}.json"
+            if not game_json_file.exists():
+                continue
+            
+            try:
+                with open(game_json_file, 'r', encoding='utf-8') as f:
+                    game_data = json.load(f)
+                
+                # Find cover image
+                cover_path = None
+                for file in game_folder_path.glob("cover_*"):
+                    if file.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
+                        cover_path = file.absolute().as_uri()
+                        break
+                
+                # Extract game info
+                game_dict = {
+                    'name': game_data.get('name', game_folder_path.name),
+                    'cover_path': cover_path,
+                    'release_date': self._format_date_ordinal(game_data.get('first_release_date')),
+                    'genres': [g.get('name', '') for g in game_data.get('genres', [])[:4]],  # Limit to 4
+                    'developer': self._get_developer(game_data),
+                    'summary': self._process_text(game_data.get('summary', '')),
+                    'rating': game_data.get('total_rating')
+                }
+                
+                # Format rating
+                if game_dict['rating']:
+                    game_dict['rating'] = int(game_dict['rating'])
+                
+                games.append(game_dict)
+                
+            except Exception as e:
+                print(f"Warning: Could not process game {game_folder_path.name}: {str(e)}")
+                continue
+        
+        return games
+    
+    def _get_developer(self, game_data):
+        """Extract developer name from game data."""
+        involved_companies = game_data.get('involved_companies', [])
+        for company in involved_companies:
+            if company.get('developer', False):
+                return company.get('company', {}).get('name', '')
+        return None
+    
+    def _format_date_ordinal(self, timestamp):
+        """Format Unix timestamp or date string to ordinal date format (e.g., '1st January 2020')."""
+        if not timestamp:
+            return None
+        
+        def get_ordinal_suffix(day):
+            """Get the ordinal suffix for a day (st, nd, rd, th)."""
+            if 10 <= day % 100 <= 20:
+                suffix = 'th'
+            else:
+                suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(day % 10, 'th')
+            return suffix
+        
+        try:
+            if isinstance(timestamp, str):
+                # Try parsing ISO date
+                date_obj = datetime.strptime(timestamp, '%Y-%m-%d')
+            else:
+                # Unix timestamp
+                date_obj = datetime.fromtimestamp(timestamp)
+            
+            day = date_obj.day
+            month = date_obj.strftime('%B')
+            year = date_obj.year
+            suffix = get_ordinal_suffix(day)
+            
+            return f"{day}{suffix} {month} {year}"
+        except:
+            return str(timestamp)
+    
+    def _process_text(self, text):
+        """Process text for HTML output."""
+        if not text:
+            return ""
+        
+        # Handle escaped characters
+        text = text.replace('\\n', '<br>')
+        text = text.replace('\\t', ' ')
+        text = text.replace('\\r', '')
+        text = text.replace('\\"', '"')
+        text = text.replace("\\'", "'")
+        text = text.replace('\\\\', '\\')
+        
+        # Handle actual newlines
+        text = text.replace('\n', '<br>')
+        text = text.replace('\r', '')
+        
+        # Clean up spaces
+        import re
+        text = re.sub(r'\s+', ' ', text)
+        text = text.strip()
+        
+        return text
+    
+    def _sanitize_filename(self, filename):
+        """Sanitize filename for filesystem safety."""
+        import re
+        filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+        filename = re.sub(r'[^\w\s-]', '', filename).strip()
+        filename = re.sub(r'[-\s]+', '_', filename)
+        return filename[:50]

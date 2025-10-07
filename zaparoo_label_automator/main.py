@@ -139,6 +139,16 @@ def run_catalogue_creation():
     platforms_processed = catalogue_generator.generate_catalogues_for_all_platforms(PATH_CONFIG["reference_data"], PATH_CONFIG["catalogue_path"])
     print(f"Processed {platforms_processed} platforms for catalogue selection")
     
+    # Generate PDF catalogues from the JSON
+    print("\nGenerating PDF catalogues...")
+    catalogue_json_path = PATH_CONFIG["catalogue_path"] / "game_selection_catalogue.json"
+    pdfs_generated = catalogue_generator.generate_pdf_catalogues_from_json(
+        catalogue_json_path=catalogue_json_path,
+        reference_data_folder=PATH_CONFIG["reference_data"],
+        pdf_output_folder=PATH_CONFIG["catalogue_path"]
+    )
+    print(f"Generated {pdfs_generated} PDF catalogues")
+    
     print("Catalogue creation complete!")
     return True
 
