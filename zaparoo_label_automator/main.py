@@ -4,32 +4,38 @@ import argparse
 from zaparoo_label_automator.igdb_scraper import IgdbScraper
 from zaparoo_label_automator.label_generator import LabelGenerator
 from zaparoo_label_automator.catalogue_generator import CatalogueGenerator
+from zaparoo_label_automator.wrapper.igdb import IgdbAPI
 
-# Configuration variables
-UPPER_BATCH_LIMIT = 500
-PLATFORMS_FILE = "user_files/platforms.csv"
-REFERENCE_GAMES_COUNT = 100
-CATALOGUE_GAMES_COUNT = 20
-OUTPUT_FOLDER = "output"
-PATH_CONFIG = {
-    "core_folder": Path(OUTPUT_FOLDER),
-    "reference_data": Path(OUTPUT_FOLDER) / "reference_data",
-    "labels_path": Path(OUTPUT_FOLDER) / "labels",
-    "catalogue_path": Path(OUTPUT_FOLDER) / "catalogue",
+CONFIG = {
+    "upper_batch_limit": 500,
+    "reference_games_count": 100,
+    "catalogue_games_count": 20,
+    "label_dpi": 300 , # DPI for PNG and PDF label generation
+    "output_path_config": {
+        "core_folder": Path("output"),
+        "reference_data": Path("output") / "reference_data",
+        "labels_path": Path("output") / "labels",
+        "catalogue_path": Path("output") / "catalogue",
+    },
+    "secrets_path": "./.config",
+    "image_config_path": "zaparoo_label_automator/config/image_config.json",
+    "game_endpoint_config_path": "zaparoo_label_automator/config/game_endpoint.json",
+    "platform_endpoint_config_path": "zaparoo_label_automator/platform_endpoint.json",
+    "media_download_config": {
+        "cover": True,
+        "platform_logo": True,
+        "screenshot": True,
+        "game_video": False # Only for future use, not currently implemented.
+    },
+    "svg_template_path": "user_files/fossHuCardLabel.svg" , # SVG template for label generation
+    "platforms_file": "user_files/platforms.csv",
+    "label_output_formats": ["pdf"] # allowed values are currently either "png", "pdf", or both
 }
 
-CONFIG_PATH = "./.config"
-IMAGE_CONFIG_PATH = "zaparoo_label_automator/image_config.json"
-LABEL_DPI = 300  # DPI for PNG and PDF label generation
-SVG_TEMPLATE_PATH = "user_files/fossHuCardLabel.svg"  # SVG template for label generation
-LABEL_OUTPUT_FORMATS = ["pdf"] # allowed values are currently either "png", "pdf", or both
+# init token manager and api rest client
+# TODO: make other methods use this
+api_client = IgdbAPI(CONFIG["secrets_path"])
 
-MEDIA_DOWNLOAD_CONFIG = {
-    "cover": True,
-    "platform_logo": True,
-    "screenshot": True,
-    "game_video": False # Only for future use, not currently implemented.
-}
 
 def parse_arguments():
     """Parse command line arguments to control which phases execute."""
@@ -75,13 +81,15 @@ def run_information_gathering():
     print("Starting information gathering phase...")
     
     scraper = IgdbScraper(
-        platforms_file=PLATFORMS_FILE,
-        games_count=REFERENCE_GAMES_COUNT,
-        output_folder=PATH_CONFIG["reference_data"],
-        config_path=CONFIG_PATH,
-        image_config_path=IMAGE_CONFIG_PATH,
-        upper_batch_limit=UPPER_BATCH_LIMIT,
-        media_download_config=MEDIA_DOWNLOAD_CONFIG
+        platforms_file=CONFIG["platforms_file"],
+        games_count=CONFIG["reference_games_count"],
+        output_folder=CONFIG["output_config_path"]["reference_data"],
+        # config_path=CONFIG["secrets_path"],
+        image_config_path=CONFIG["image_config_path"],
+        upper_batch_limit=CONFIG["upper_batch_limit"],
+        media_download_config=CONFIG["media_download_config"],
+        game_endpoint_config = CONFIG["game_endpoint_config_path"],
+        platform_endpoint_config = CONFIG["platform_endpoint_config_path"]
     )
     scraper.run()
     
@@ -93,29 +101,29 @@ def run_label_creation():
     print("Starting label creation phase...")
     
     # Check for required dependencies
-    if not PATH_CONFIG["reference_data"].exists():
-        print(f"Error: Reference data path '{PATH_CONFIG["reference_data"]}' does not exist. Run information gathering phase first.")
+    if not CONFIG["output_config_path"]["reference_data"].exists():
+        print(f"Error: Reference data path '{CONFIG["output_config_path"]["reference_data"]}' does not exist. Run information gathering phase first.")
         return False
     
-    catalogue_json_path = PATH_CONFIG["catalogue_path"] / "game_selection_catalogue.json"
+    catalogue_json_path = CONFIG["output_config_path"]["catalogue_path"] / "game_selection_catalogue.json"
     if not catalogue_json_path.exists():
         print(f"Error: Catalogue JSON not found at '{catalogue_json_path}'. Run catalogue creation phase first.")
         return False
     
     # Create labels folder if it doesn't exist
-    PATH_CONFIG["labels_path"].mkdir(parents=True, exist_ok=True)
+    CONFIG["output_config_path"]["labels_path"].mkdir(parents=True, exist_ok=True)
     
     label_generator = LabelGenerator(
-        template_path=SVG_TEMPLATE_PATH,
-        dpi=LABEL_DPI,
-        output_formats=LABEL_OUTPUT_FORMATS,
+        template_path=CONFIG["svg_template_path"],
+        dpi=CONFIG["label_dpi"],
+        output_formats=CONFIG["label_output_formats"],
     )
     
     try:
         total_labels = label_generator.generate_labels_from_catalogue(
             catalogue_json_path=catalogue_json_path,
-            reference_data_path=PATH_CONFIG["reference_data"],
-            label_output_folder=PATH_CONFIG["labels_path"]
+            reference_data_path=CONFIG["output_config_path"]["reference_data"],
+            label_output_folder=CONFIG["output_config_path"]["labels_path"]
         )
         print(f"Label creation complete! Generated {total_labels} labels total.")
         return True
@@ -128,24 +136,24 @@ def run_catalogue_creation():
     """Run the catalogue creation phase."""
     print("Starting catalogue creation phase...")
     
-    if not PATH_CONFIG["reference_data"].exists():
-        print(f"Error: Detail path '{PATH_CONFIG["reference_data"]}' does not exist. Run information gathering phase first.")
+    if not CONFIG["output_config_path"]["reference_data"].exists():
+        print(f"Error: Detail path '{CONFIG["output_config_path"]["reference_data"]}' does not exist. Run information gathering phase first.")
         return False
     
     # Create catalogue folder if it doesn't exist
-    PATH_CONFIG["catalogue_path"].mkdir(parents=True, exist_ok=True)
+    CONFIG["output_config_path"]["catalogue_path"].mkdir(parents=True, exist_ok=True)
     
-    catalogue_generator = CatalogueGenerator(catalogue_games_count=CATALOGUE_GAMES_COUNT)
-    platforms_processed = catalogue_generator.generate_catalogues_for_all_platforms(PATH_CONFIG["reference_data"], PATH_CONFIG["catalogue_path"])
+    catalogue_generator = CatalogueGenerator(catalogue_games_count=CONFIG["catalogue_games_count"])
+    platforms_processed = catalogue_generator.generate_catalogues_for_all_platforms(CONFIG["output_config_path"]["reference_data"], CONFIG["output_config_path"]["catalogue_path"])
     print(f"Processed {platforms_processed} platforms for catalogue selection")
     
     # Generate PDF catalogues from the JSON
     print("\nGenerating PDF catalogues...")
-    catalogue_json_path = PATH_CONFIG["catalogue_path"] / "game_selection_catalogue.json"
+    catalogue_json_path = CONFIG["output_config_path"]["catalogue_path"] / "game_selection_catalogue.json"
     pdfs_generated = catalogue_generator.generate_pdf_catalogues_from_json(
         catalogue_json_path=catalogue_json_path,
-        reference_data_folder=PATH_CONFIG["reference_data"],
-        pdf_output_folder=PATH_CONFIG["catalogue_path"]
+        reference_data_folder=CONFIG["output_config_path"]["reference_data"],
+        pdf_output_folder=CONFIG["output_config_path"]["catalogue_path"]
     )
     print(f"Generated {pdfs_generated} PDF catalogues")
     

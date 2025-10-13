@@ -1,3 +1,4 @@
+# TODO: Split into two modules - one to scrape platforms, one to scrape games
 import csv
 import json
 import shutil
@@ -11,21 +12,26 @@ from zaparoo_label_automator.image_downloader import ImageDownloader
 
 
 class IgdbScraper:
-    def __init__(self, platforms_file, games_count, output_folder, config_path, image_config_path, upper_batch_limit, media_download_config=None):
+    # TODO: Too many parameters
+    def __init__(self, platforms_file, games_count, output_folder, config_path, image_config_path, upper_batch_limit, game_endpoint_config, platform_endpoint_config, media_download_config=None):
         self.platforms_file = platforms_file
         self.games_count = games_count
         self.upper_batch_limit = upper_batch_limit
+        # TODO: Move out to main.py
         self.token_manager = TokenManager(config_path=config_path)
         self.api_client = GenericRestAPI()
         self.platforms_data = []
         self.output_path = Path(output_folder)
         self.media_download_config = media_download_config or {}
+        self.game_endpoint_config = game_endpoint_config
+        self.platform_endpoint_config = platform_endpoint_config
         self.image_downloader = ImageDownloader(config_path=image_config_path, media_config=self.media_download_config)
         
     def run(self):
         """Main orchestration method"""
         # Clear output folder
         # how 'bout we don't for now, 'cos this takes a WHILE now
+        # TODO: this should be smarter and should instead skip any outputs that already exist
         # self._clear_output_folder()
         
         # Read platforms from CSV
@@ -82,7 +88,7 @@ class IgdbScraper:
     def _fetch_platform_data(self, platform_ids):
         """Fetch platform data from IGDB API"""
         # Load platform endpoint configuration
-        with open('zaparoo_label_automator/platform_endpoint.json', 'r') as f:
+        with open(self.platform_endpoint_config, 'r') as f:
             config = json.load(f)
         
         # Build query with filter
@@ -109,7 +115,7 @@ class IgdbScraper:
     def _fetch_games_data(self, platform_id, limit):
         """Fetch games data for a specific platform"""
         # Load games endpoint configuration
-        with open('zaparoo_label_automator/game_endpoint.json', 'r') as f:
+        with open(self.game_endpoint_config, 'r') as f:
             config = json.load(f)
         
         # Handle batching if needed

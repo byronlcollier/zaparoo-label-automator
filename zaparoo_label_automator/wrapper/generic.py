@@ -1,8 +1,9 @@
+from abc import ABC, abstractmethod
 from typing import Literal, Union, Optional
 import requests
 
 
-class GenericRestAPI:
+class GenericRestAPI(ABC):
 
     def __init__(
         self,
@@ -13,16 +14,23 @@ class GenericRestAPI:
         else:
             self._timeout = timeout
 
+        # Initialise with empty headers - subclasses should set this where needed
+        self._default_headers: dict = {}
+
+    @abstractmethod
+    # abstract method to be implemented by child classes
+    def _request_validation(self) -> None:
+        pass
+
     def request(
             self,
             method: Literal["GET", "POST", "PUT", "DELETE", "PATCH"],
             url: Optional[str] = None,
-            headers: Optional[dict] = None,
             body: Union[str, dict, list, int, float, bool, None] = None
         ) -> dict:
-        if headers is None or url is None:
+        if url is None:
             raise AttributeError(
-                "Error! Both headers and REST API URL must be supplied."
+                "Error! REST API URL must be supplied."
             )
 
         if method is None:
@@ -30,8 +38,12 @@ class GenericRestAPI:
                 "Error! HTTP method must be supplied."
             )
 
-        # Build request parameters dynamically
-        request_params = {"url": url, "headers": headers, "timeout": self._timeout}
+        self._request_validation()
+
+        # Build request parameters - only include headers if any are set
+        request_params = {"url": url, "timeout": self._timeout}
+        if self._default_headers:
+            request_params["headers"] = self._default_headers
 
         # Handle body based on its type
         if body is not None:
