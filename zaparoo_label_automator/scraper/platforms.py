@@ -43,6 +43,4 @@ class PlatformScraper(IgdbScraper):
 
         self._requested_platforms = self._get_platforms_from_file()
         
-        for platform_id, platform_name in self._requested_platforms:
-            # TODO: change to logger instead of print
-            print(f"Processing platform name {platform_name} with ID {platform_id})")
+        # TODO: check len of list against max batch size first - can do many requests at once instead of iterative.
