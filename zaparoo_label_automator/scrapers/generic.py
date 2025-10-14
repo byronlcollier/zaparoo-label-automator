@@ -1,3 +1,4 @@
+import json
 from abc import (
     ABC,
     abstractmethod
@@ -15,20 +16,15 @@ class IgdbScraper(ABC):
         secrets_path: str,
         endpoint_config_file: str,
     ):
-        if output_folder is None: 
-            raise AttributeError("Error! output_folder must be supplied!")
-        if upper_batch_limit is None: 
-            raise AttributeError("Error! upper_batch_limit must be supplied!")
-        if secrets_path is None: 
-            raise AttributeError(f"Error! secrets_path must be supplied!")
-        if endpoint_config_file is None: 
-            raise AttributeError(f"Error! endpoint_config_file must be supplied!")
+        if not Path(endpoint_config_file).is_file():
+            raise FileNotFoundError(f"Error! Endpoint config file '{endpoint_config_file}' does not exist!")
         
-        # no validations failed 
         self._upper_batch_limit = upper_batch_limit
-        self._endpoint_config = endpoint_config_file
         self._output_path = Path(output_folder)
         self._api_client = IgdbAPI(secrets_path=secrets_path)
+
+        with open(endpoint_config_file, 'r', encoding='utf-8') as f:
+            self._endpoint_config = json.load(f)
 
     @abstractmethod
     def scrape(self):

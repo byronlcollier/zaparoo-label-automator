@@ -34,13 +34,22 @@ class PlatformScraper(IgdbScraper):
                 id_key = next((k for k in row.keys() if k.strip().lower() == 'id'), 'id')                
                 platform_id = row[id_key].strip()
                 output_list.append(platform_id)
-        # TODO: validate whether any records were actually found in the CSV
+        
+        if len(output_list) == 0:
+            raise AttributeError(f"Error! {len(output_list)} records found in file '{self._platforms_file}'!")
         # TODO: change to logger instead of print
         print(f"Found {len(output_list)} IDs in {self._platforms_file}")
         return output_list
 
-    def scrape(self):
+    def _scrape_platform_info(self, platform_ids: list[int]):
+        id_filter = ','.join(platform_ids)
+        query_body = f"{self._endpoint_config['properties']['body']} where id = ({id_filter}); limit {self._upper_batch_limit}"
 
-        self._requested_platforms = self._get_platforms_from_file()
         
-        # TODO: check len of list against max batch size first - can do many requests at once instead of iterative.
+
+    def scrape(self):
+        self._requested_platforms = self._get_platforms_from_file()
+        total_requests = len(self._requested_platforms)
+
+        for i in range(0, total_requests, self._upper_batch_limit):
+            print("do something!")
