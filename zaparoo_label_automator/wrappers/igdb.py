@@ -1,5 +1,5 @@
-from twitch import TokenManager
-from generic import GenericRestAPI
+from zaparoo_label_automator.wrappers.twitch import TokenManager
+from zaparoo_label_automator.wrappers.generic import GenericRestAPI
 
 # inherits the underlying generic class, but sets the header on init
 class IgdbAPI(GenericRestAPI):
