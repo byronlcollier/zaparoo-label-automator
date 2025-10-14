@@ -4,7 +4,7 @@ import argparse
 from zaparoo_label_automator.igdb_scraper import IgdbScraper
 from zaparoo_label_automator.label_generator import LabelGenerator
 from zaparoo_label_automator.catalogue_generator import CatalogueGenerator
-from zaparoo_label_automator.wrapper.igdb import IgdbAPI
+from zaparoo_label_automator.wrappers.igdb import IgdbAPI
 
 CONFIG = {
     "upper_batch_limit": 500,

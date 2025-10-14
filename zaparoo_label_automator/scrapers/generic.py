@@ -3,7 +3,7 @@ from abc import (
     abstractmethod
 )
 from pathlib import Path
-from zaparoo_label_automator.wrapper.igdb import IgdbAPI
+from zaparoo_label_automator.wrappers.igdb import IgdbAPI
 
 
 # abstract base class used to set attributes common to all scrapers

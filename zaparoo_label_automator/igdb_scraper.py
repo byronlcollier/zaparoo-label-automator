@@ -6,8 +6,8 @@ import re
 from pathlib import Path
 from datetime import datetime
 import pycountry
-from zaparoo_label_automator.wrapper.generic import GenericRestAPI
-from zaparoo_label_automator.wrapper.twitch import TokenManager
+from zaparoo_label_automator.wrappers.generic import GenericRestAPI
+from zaparoo_label_automator.wrappers.twitch import TokenManager
 from zaparoo_label_automator.image_downloader import ImageDownloader
 
 

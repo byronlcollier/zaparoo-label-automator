@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from zaparoo_label_automator.scraper.generic import IgdbScraper
+from zaparoo_label_automator.scrapers.generic import IgdbScraper
 
 # platform info scraper
 class PlatformScraper(IgdbScraper):
