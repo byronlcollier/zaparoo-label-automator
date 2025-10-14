@@ -192,6 +192,7 @@ class TokenManager:
         if self._client_id is None:
             self._read_credentials_from_file()
 
+        # TODO: Add 'Content-Type' = 'text/plain'
         return {
             "Client-ID": self._client_id,
             "Authorization": f"Bearer {self.value}"
