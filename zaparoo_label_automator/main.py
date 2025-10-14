@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 import argparse
+from zaparoo_label_automator.scrapers.platforms import PlatformScraper
 from zaparoo_label_automator.igdb_scraper import IgdbScraper
 from zaparoo_label_automator.label_generator import LabelGenerator
 from zaparoo_label_automator.catalogue_generator import CatalogueGenerator
@@ -10,6 +11,7 @@ CONFIG = {
     "upper_batch_limit": 500,
     "reference_games_count": 100,
     "catalogue_games_count": 20,
+    "api_timeout": 60,
     "label_dpi": 300 , # DPI for PNG and PDF label generation
     "output_path_config": {
         "core_folder": Path("output"),
@@ -17,10 +19,10 @@ CONFIG = {
         "labels_path": Path("output") / "labels",
         "catalogue_path": Path("output") / "catalogue",
     },
-    "secrets_path": "./.config",
+    "secrets_path": ".config",
     "image_config_path": "zaparoo_label_automator/config/image_config.json",
     "game_endpoint_config_path": "zaparoo_label_automator/config/game_endpoint.json",
-    "platform_endpoint_config_path": "zaparoo_label_automator/platform_endpoint.json",
+    "platform_endpoint_config_path": "zaparoo_label_automator/config/platform_endpoint.json",
     "media_download_config": {
         "cover": True,
         "platform_logo": True,
@@ -32,9 +34,9 @@ CONFIG = {
     "label_output_formats": ["pdf"] # allowed values are currently either "png", "pdf", or both
 }
 
-# init token manager and api rest client
-# TODO: make other methods use this
-api_client = IgdbAPI(CONFIG["secrets_path"])
+# # init token manager and api rest client
+# # TODO: make other methods use this - no, maybe not, init this in the scrapers instead
+# api_client = IgdbAPI(CONFIG["secrets_path"])
 
 
 def parse_arguments():
@@ -163,6 +165,19 @@ def run_catalogue_creation():
 
 def main():
     args = parse_arguments()
+
+    # TODO: DEBUG: temporarily disrupting program flow in order to test refactoring
+
+    platform_scraper = PlatformScraper(
+        output_folder=CONFIG['output_path_config']['core_folder'],
+        upper_batch_limit=CONFIG['upper_batch_limit'],
+        secrets_path=CONFIG['secrets_path'],
+        endpoint_config_file=CONFIG['platform_endpoint_config_path'],
+        platforms_file=CONFIG['platforms_file'],
+        api_timeout=CONFIG['api_timeout']
+    )
+
+    platform_scraper.scrape()
     
     # Determine which phases to run
     run_gather = args.gather or args.gather_only
