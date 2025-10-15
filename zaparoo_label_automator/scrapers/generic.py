@@ -3,6 +3,7 @@ from abc import (
     ABC,
     abstractmethod
 )
+from typing import Any
 from pathlib import Path
 from zaparoo_label_automator.wrappers.igdb import IgdbAPI
 
@@ -28,5 +29,5 @@ class IgdbScraper(ABC):
             self._endpoint_config = json.load(f)
 
     @abstractmethod
-    def scrape(self):
+    def scrape(self, *args: Any, **kwargs: Any) -> list:
         pass
