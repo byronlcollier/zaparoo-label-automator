@@ -56,27 +56,19 @@ class PlatformScraper(IgdbScraper):
         )
         return response
 
-    def scrape(self):
+    def scrape(self) -> list:
         self._requested_platforms = self._get_platforms_from_file()
         total_requests = len(self._requested_platforms)
-
-        results = []
+        platform_data = []
 
         for i in range(0, total_requests, self._upper_batch_limit):
             batch_ids = self._requested_platforms[i:i + self._upper_batch_limit]
             batch_results = self._scrape_platform_info(platform_ids=batch_ids)
-            results.append(batch_results)
 
-        # TODO: Continue from here. Because holy cow it actually works. Turns out I MIGHT actually know what I'm doing. 
-        # at this point the original program would post-process dates and country codes
-        # but I'm not sure I want to do that. 
-        # so it might just be sufficient to save the file now - check the old program.
-        # well at this point the old program would get the games for each platform one at a time.
-        # but we can be smarter than that. 
-        # will probably want to check the len of the results object to make sure it matches 'requested' count
-        # instead of a 'results' list, make that an attribute/property of the class
-        # that way we have something to iterate over when it comes to getting games for each platform.
-        # we WILL want to iterate platforms one at a time in order to get games because there could be $lots
-        # why are we talking about ourselves in plural - there's only ONE person working on this...
-        # habit from work I guess...
-        pprint(results)
+            for result in batch_results:
+                platform_data.append(result)
+
+        if len(self._platform_data) != len(self._requested_platforms):
+            raise AttributeError(f"Error! {len(self._requested_platforms)} platforms requested but only {len(platform_data)} retrieved!")
+
+        return platform_data

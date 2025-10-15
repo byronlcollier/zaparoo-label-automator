@@ -1,0 +1,31 @@
+[core]
+upper_batch_limit = 500
+reference_games_count = 100
+catalogue_games_count = 20
+api_timeout = 60
+secrets_path = ".config"
+
+[input_paths]
+platforms_file = "user_files/platforms.csv"
+
+[output_paths]
+base_folder = "output"
+reference_data = "output/reference_data"
+labels_path = "output/labels"
+catalogue_path = "output/catalogue"
+
+[label_config]
+label_dpi = 300
+svg_template_path = "user_files/fossHuCardLabel.svg"
+label_output_formats = ["pdf"]
+
+[endpoints]
+image_config_path = "zaparoo_label_automator/config/image_config.json"
+game_endpoint_config_path = "zaparoo_label_automator/config/game_endpoint.json"
+platform_endpoint_config_path = "zaparoo_label_automator/config/platform_endpoint.json"
+
+[media_download_config]
+cover = true
+platform_logo = true
+screenshot = true
+game_video = false

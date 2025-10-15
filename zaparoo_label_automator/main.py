@@ -177,7 +177,7 @@ def main():
         api_timeout=CONFIG['api_timeout']
     )
 
-    platform_scraper.scrape()
+    platform_data = platform_scraper.scrape()
     
     # Determine which phases to run
     run_gather = args.gather or args.gather_only
